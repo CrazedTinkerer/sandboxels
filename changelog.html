@@ -109,6 +109,172 @@
 <p>The original <a href="https://sandboxels.r74n.com/changelog.txt">plain text version</a> of this is still maintained.</p>
 </div>
 
+<h2 id="1.10.2">[Version 1.10.2 - December 15, 2024 - Birthday III]</h2>
+<ul>
+<li>+ Cheese Powder, from breaking Cheese</li>
+<li>+ Chocolate Powder, from breaking Chocolate</li>
+<li>[Changes]</li>
+<li>~ Drawing lines shows a preview of pixel placement</li>
+<li>~ Updated Brick texture for better shading</li>
+<li>~ LEDs, Light Bulbs, and Fireflies can be painted</li>
+<li>+ Humans panic when seeing dangerous things, like Fire</li>
+<li>+ Humans change direction after hitting walls</li>
+<li>~ Humans eat more consistently</li>
+<li>~ Humans have a panic limit</li>
+<li>~ Humans no longer eat Human meat</li>
+<li>~ Smash tool moves pixels if they can't be broken</li>
+<li>+ Steam decomposes at extreme temperatures</li>
+<li>+ Ruins has a Brick texture</li>
+<li>~ Brick Rubble no longer breaks into Dust</li>
+<li>~ Recolored Brick Rubble</li>
+<li>+ Glass has a light border</li>
+<li>~ Fancy textures have grain, besides Glass</li>
+<li>+ Rock Wall can be made by gluing Rocks</li>
+<li>+ Brick can be made by gluing Brick Rubble</li>
+<li>+ Mudstone can be made by gluing Dirt</li>
+<li>+ Packed Sand can be made by Sand</li>
+<li>+ Sponges can dry Mud and Wet Sand</li>
+<li>+ Clay can be made by dissolving Wet Sand in Acid</li>
+<li>+ Cement can be made with Clay and Quicklime</li>
+<li>~ Quicklime no longer turns into Limestone on its own</li>
+<li>+ Plastic breaks into Beads</li>
+<li>+ Charcoal slowly stains solids</li>
+<li>+ Animals can spawn Eggs or offspring in Water</li>
+<li>+ Seeds planted under soil will rise</li>
+<li>+ Birds eat Spiders and their Webs</li>
+<li>+ Rocks destroy Webs</li>
+<li>+ Frogs release Steam when cooked</li>
+<li>+ Worms break down Fiber</li>
+<li>~ Worms compost some Sawdust into Dirt</li>
+<li>+ Soap kills Snails and Slugs</li>
+<li>+ Soap removes Slime</li>
+<li>+ Alcohol kills Flower Pistils</li>
+<li>+ Mercury kills Algae</li>
+<li>~ Sap boils into some Steam</li>
+<li>~ Bread is less flammable</li>
+<li>+ Ammonia affects Wheat</li>
+<li>+ Poison dirties Salt Water, Sugar Water, and Seltzer</li>
+<li>+ Water on burning Oil will explode</li>
+<li>+ Bleach reacts with Nut Oil and Grease</li>
+<li>+ Baking Soda reacts with Soap</li>
+<li>+ Copper Sulfate kills Spiders</li>
+<li>+ Copper Sulfate stains Zinc</li>
+<li>+ Bless removes Heat Ray</li>
+<li>+ Plague makes Heads green</li>
+<li>+ Plague destroys Skin</li>
+<li>+ Hair absorbs some Water</li>
+<li>~ Breaking Balloons makes some Pop</li>
+<li>~ Cheese flows slower</li>
+<li>~ Coffee Grounds in Milk brew into Coffee instead</li>
+<li>~ Mushroom Spores no longer break</li>
+<li>~ Acid Clouds don't precipitate when too hot or cold</li>
+<li>~ Border can be painted</li>
+<li>~ Tweaked Charcoal heat color</li>
+<li>~ Moved Light Bulb to after LEDs</li>
+<li>+ Midas Touch turns Paper green</li>
+<li>~ Midas Touch turns Humans into solid Gold instead of Coins</li>
+<li>+ Wall alias 'Solid'</li>
+<li>+ Mayo alias 'Mayonnaise'</li>
+<li>+ Alcohol alias 'Ethanol'</li>
+<li>+ Unbreakable elements are clarified in element info</li>
+<li>~ Screenshots download with name of current save</li>
+<li>~ Pixel count turns red when all canvas sizes are full</li>
+<li>~ Log messages have a black shadow to read on bright backgrounds</li>
+<li>~ TPS dialog displays minimum and maximum</li>
+<li>[Bug Fixes]</li>
+<li>~ Fixed: Replace Mode causes pixels to float while placing</li>
+<li>~ Fixed: Detached Heads and dead Humans can eat food</li>
+<li>~ Fixed: Pixel alpha isn't set from element properties on creation</li>
+<li>~ Fixed: Molten Thermite continues to heat when not burning</li>
+<li>~ Fixed: Prop tool can't set value when existing value is null</li>
+<li>~ Fixed: Unbreakable pixels can burn away when using Prop tool (Perma-burning!!!)</li>
+<li>~ Fixed: Pixels with burnt states never burn when using Prop tool</li>
+<li>~ Fixed: Prop tool doesn't retain "0" value on next dialog</li>
+<li>~ Fixed: Prop tool doesn't handle changing "x" and "y" properties</li>
+<li>~ Fixed: Placing Fire on insulative pixels heats them</li>
+<li>~ Fixed: Burning heats insulative pixels</li>
+<li>~ Fixed: Rays, Bless, Radiation, and some Bombs change insulative pixel temperature</li>
+<li>~ Fixed: Stink Bugs aren't properly killed by Frogs, Sap, Copper Sulfate, and Borax</li>
+<li>~ Fixed: Erasing with Lookup selected will only erase 1x1</li>
+<li>~ Fixed: Erasing fast with Pick or Lookup selected will leave gaps</li>
+<li>~ Fixed: Hail doesn't conduct heat</li>
+<li>~ Fixed: Hail cannot break solids without a defined state</li>
+<li>~ Fixed: Breaking Humans eventually creates Sand and Cement</li>
+<li>~ Fixed: Element buttons arranged in weird columns after certain issues</li>
+<li>~ Fixed: Ball doesn't have density and floats on gases</li>
+<li>[Technical]</li>
+<li>+ BORDER render preset</li>
+<li>+ 'grain' element property</li>
+<li>+ 'toolHoverStat' element property, function that takes the hovered pixel while selected</li>
+<li>+ 'buttonColor' element property</li>
+<li>~ Humans now eat any element with true 'isFood' property</li>
+<li>~ Pixels with 0% alpha won't appear in Basic View</li>
+<li>~ LEDs with 0% alpha will only appear when powered</li>
+<li>+ releaseElement function has option to replace liquids</li>
+<li>~ Fixed: lineCoords function returns duplicate values</li>
+<li>+ empty.js mod for browser JavaScript overriding</li>
+</ul>
+
+<h2 id="1.10.1">[Version 1.10.1 - October 5, 2024 - Creepy Crawlies]</h2>
+<ul>
+<li>[Crawly]</li>
+<li>+ Spider, will climb and create Webs</li>
+<li>+ Web (Hidden), will trap bugs</li>
+<li>+ Ants can climb walls</li>
+<li>[Creepy]</li>
+<li>+ Soul (Hidden), from Humans</li>
+<li>+ Ectoplasm (Hidden)</li>
+<li>+ Tombstone, spawns Souls</li>
+<li>~ Note: Soul features will move to the souls.js mod after October</li>
+<li>+ Candy is candy corn-colored</li>
+<li>+ Humans will wear orange shirts on Halloween</li>
+<li>[Changes]</li>
+<li>+ Fire can heat existing pixels when placed over them</li>
+<li>+ Wet Sand and Mud release Steam when heated</li>
+<li>+ Smashing Clouds can release their Water</li>
+<li>+ Water will create Bubbles before boiling</li>
+<li>+ Dirty Water can be purified before boiling</li>
+<li>+ Panicking humans will cause others to panic</li>
+<li>+ Rice can be fermented</li>
+<li>+ Rats can eat Vines</li>
+<li>+ Bleach kills Algae</li>
+<li>+ Salt slowly dissolves in Bleach</li>
+<li>+ Bleach destroys Ink and Dye</li>
+<li>+ Bleach stains Porcelain Shards brown</li>
+<li>+ Caramel dissolves in Vinegar</li>
+<li>+ Image tool set to Paint will recolor pixels</li>
+<li>+ Midas Touch converts hot liquids to Molten Gold</li>
+<li>~ Thermite can no longer form Slag</li>
+<li>~ Milk boils more realistically</li>
+<li>~ Increased minimum temperature for Meat to make Grease</li>
+<li>~ Blaster explodes into less Plasma</li>
+<li>~ Moved Hive to after Bee when unhidden</li>
+<li>+ Rust alias 'Iron Oxide'</li>
+<li>[Bug Fixes]</li>
+<li>~ Fixed: Mix with Replace Mode deletes pixels</li>
+<li>~ Fixed: Cannot Erase lines on mobile</li>
+<li>~ Fixed: Heat glow appears in inappropriate views</li>
+<li>~ Fixed: Void can be dragged</li>
+<li>~ Fixed: Oxidized Copper can't sink in liquids</li>
+<li>~ Fixed: Pressure Plate doesn't conduct Heat or sink</li>
+<li>~ Fixed: Fire created by molten pixels isn't hot enough</li>
+<li>~ Fixed: Mods added with backslash can't be removed</li>
+<li>~ Fixed: Single Sponge pixels have NaN moisture</li>
+<li>~ Fixed: Non-string hoverStat values crash simulation</li>
+<li>~ Fixed: Crash when pixel changes state into a customColor element</li>
+<li>[Technical]</li>
+<li>+ URL parameter ?holiday=false disables holiday events</li>
+<li>+ Pressure Plate 'min' attribute for minimum density</li>
+<li>+ 'onStateHigh' and 'onStateLow' element properties</li>
+<li>+ 'buttonGlow' element property</li>
+<li>+ Saves with abnormally large canvases display a warning</li>
+<li>+ createPixel and changePixel functions accept null values</li>
+<li>~ Corn updated to use 'onStateHigh' property</li>
+<li>~ Pixel 'glow' attribute can be false to override default</li>
+<li>~ Pixel 'glow' attribute is removed when pixel changes</li>
+<li>~ Random element is no longer hard-coded</li>
+</ul>
+
 <h2 id="1.10">[Version 1.10 - August 2, 2024 - Return of the Sand]</h2>
 <ul>
 <li>+ Rice</li>
@@ -2403,11 +2569,13 @@
 </script>
 <script>
     changelog = document.getElementById("changelog");
-    changelog.innerHTML = changelog.innerHTML.replaceAll("<li>+","<li class='ad'>");
-    changelog.innerHTML = changelog.innerHTML.replaceAll("<li>-","<li class='rm'>");
-    changelog.innerHTML = changelog.innerHTML.replaceAll("<li>~","<li class='ch'>");
-    changelog.innerHTML = changelog.innerHTML.replaceAll(">   ","><span class='indent'></span>");
-    changelog.innerHTML = changelog.innerHTML.replaceAll("<li>[","<li class='update-section'>[");
+    let html = changelog.innerHTML;
+    html = html.replaceAll("<li>+","<li class='ad'>");
+    html = html.replaceAll("<li>-","<li class='rm'>");
+    html = html.replaceAll("<li>~","<li class='ch'>");
+    html = html.replaceAll(">   ","><span class='indent'></span>");
+    html = html.replaceAll("<li>[","<li class='update-section'>[");
+    changelog.innerHTML = html;
 </script>
 
 

@@ -29,7 +29,7 @@
 "seltzer":"Eau gazeuse",
 "dirty_water":"Eau sale",
 "pool_water":"Eau de piscine",
-"dirt":"Saleté",
+"dirt":"Terre",
 "mud":"Boue",
 "wet_sand":"Sable mouillé",
 "rock":"Roche",
@@ -97,7 +97,7 @@
 "flea":"Puce",
 "termite":"Termite",
 "ant":"Fourmi",
-"fly":"Voler",
+"fly":"Mouche",
 "firefly":"Luciole",
 "hive":"Ruche",
 "bee":"Abeille",
@@ -548,5 +548,12 @@
 "galvanized_steel": "Acier galvanisé",
 "rice": "Le riz",
 "midas_touch": "Touche de Midas",
-"liquid_ozone": "Ozone liquide"  
+"liquid_ozone": "Ozone liquide",  
+"web": "Toile",
+"soul": "Âme",
+"spider": "Araignée",
+"ectoplasm": "Ectoplasme",
+"tombstone": "Pierre tombale",
+"cheese_powder":"Poudre de fromage",
+"chocolate_powder":"Poudre de chocolat"
 }

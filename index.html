@@ -48,7 +48,7 @@
     <meta name="twitter:creator:id" content="1436857621827530753">
 
     <script> // versioning info
-        currentversion = "1.10";
+        currentversion = "1.10.2";
         saveVersion = 2;
     </script>
     <style>
@@ -75,7 +75,7 @@
             "availability":"https://schema.org/InStock"
           },
           "genre": "Falling-sand game",
-          "softwareVersion":"1.9.1",
+          "softwareVersion":"1.10.2",
           "datePublished":"2021-12-15",
           "dateCreated":"2021-12-15",
           "gameTip":"https://sandboxels.r74n.com/controls",
@@ -135,461 +135,484 @@
         
         defaultCooldown = 8;
         behaviors = {
-    POWDER_OLD: [
-        "XX|XX|XX",
-        "XX|XX|XX",
-        "M2|M1|M2",
-    ],
-    POWDER: function(pixel) {
-        if (pixel.start === pixelTicks) {return}
-        if (pixel.charge && elements[pixel.element].behaviorOn) {
-            pixelTick(pixel);
-            return;
+POWDER_OLD: [
+    "XX|XX|XX",
+    "XX|XX|XX",
+    "M2|M1|M2",
+],
+POWDER: function(pixel) {
+    if (pixel.start === pixelTicks) {return}
+    if (pixel.charge && elements[pixel.element].behaviorOn) {
+        pixelTick(pixel);
+        return;
+    }
+    if (!tryMove(pixel, pixel.x, pixel.y+1)) {
+        if (Math.random() < 0.5) {
+            if (!tryMove(pixel, pixel.x+1, pixel.y+1)) {
+                tryMove(pixel, pixel.x-1, pixel.y+1);
+            }
+        } else if (!tryMove(pixel, pixel.x-1, pixel.y+1)) {
+            tryMove(pixel, pixel.x+1, pixel.y+1);
         }
-        if (!tryMove(pixel, pixel.x, pixel.y+1)) {
+    }
+    doDefaults(pixel);
+},
+AGPOWDER: [
+    "M2|M1|M2",
+    "XX|XX|XX",
+    "XX|XX|XX",
+],
+LIQUID_OLD: [
+    "XX|XX|XX",
+    "M2|XX|M2",
+    "M1|M1|M1",
+],
+LIQUID: function(pixel) {
+    if (pixel.start === pixelTicks) {return}
+    if (pixel.charge && elements[pixel.element].behaviorOn) {
+        pixelTick(pixel);
+        return;
+    }
+    var viscMove = true;
+    if (elements[pixel.element].viscosity) {
+        viscMove = (Math.random()*100) < 100 / Math.pow(elements[pixel.element].viscosity, 0.25);
+    }
+    if (!viscMove) {
+        var move1Spots = [
+            0
+        ]
+    }
+    else {
+        var move1Spots = [
+            1,0,-1
+        ]
+    }
+    var moved = false;
+    for (var i = 0; i < move1Spots.length; i++) {
+        const j = Math.random()*move1Spots.length | 0;
+        const coord = move1Spots[j];
+        if (tryMove(pixel, pixel.x+coord, pixel.y+1)) { moved = true; break; }
+        move1Spots.splice(j, 1);
+    }
+    if (!moved) {
+        if (viscMove) {
             if (Math.random() < 0.5) {
-                if (!tryMove(pixel, pixel.x+1, pixel.y+1)) {
-                    tryMove(pixel, pixel.x-1, pixel.y+1);
+                if (!tryMove(pixel, pixel.x+1, pixel.y)) {
+                    tryMove(pixel, pixel.x-1, pixel.y);
                 }
-            } else if (!tryMove(pixel, pixel.x-1, pixel.y+1)) {
-                tryMove(pixel, pixel.x+1, pixel.y+1);
+            } else {
+                if (!tryMove(pixel, pixel.x-1, pixel.y)) {
+                    tryMove(pixel, pixel.x+1, pixel.y);
+                }
             }
         }
-        doDefaults(pixel);
-    },
-    AGPOWDER: [
-        "M2|M1|M2",
-        "XX|XX|XX",
-        "XX|XX|XX",
-    ],
-    LIQUID_OLD: [
-        "XX|XX|XX",
-        "M2|XX|M2",
-        "M1|M1|M1",
-    ],
-    LIQUID: function(pixel) {
-        if (pixel.start === pixelTicks) {return}
-        if (pixel.charge && elements[pixel.element].behaviorOn) {
-            pixelTick(pixel);
-            return;
-        }
-        var viscMove = true;
-        if (elements[pixel.element].viscosity) {
-            viscMove = (Math.random()*100) < 100 / Math.pow(elements[pixel.element].viscosity, 0.25);
-        }
-        if (!viscMove) {
-            var move1Spots = [
-                0
-            ]
+    }
+    doDefaults(pixel);
+},
+SUPERFLUID_OLD: [
+    "XX|XX|XX",
+    "XX|XX|M2 AND BO",
+    "XX|M1|M2",
+],
+SUPERFLUID: function(pixel) {
+    if (pixel.start === pixelTicks) {return}
+    if (pixel.charge && elements[pixel.element].behaviorOn) {
+        pixelTick(pixel);
+        return;
+    }
+    if (!tryMove(pixel, pixel.x, pixel.y+1)) {
+        // go either left or right depending on pixel.flipX
+        var newx = pixel.flipX ? pixel.x-1 : pixel.x+1;
+        if (Math.random() < 0.5) {
+            if (!tryMove(pixel, newx, pixel.y)) {
+                pixel.flipX = !pixel.flipX;
+                tryMove(pixel, newx, pixel.y+1);
+            }
         }
         else {
-            var move1Spots = [
-                1,0,-1
-            ]
+            if (!tryMove(pixel, newx, pixel.y+1)) {
+                if (!tryMove(pixel, newx, pixel.y)) { pixel.flipX = !pixel.flipX; }
+            }
         }
-        var moved = false;
-        for (var i = 0; i < move1Spots.length; i++) {
-            const j = Math.random()*move1Spots.length | 0;
-            const coord = move1Spots[j];
-            if (tryMove(pixel, pixel.x+coord, pixel.y+1)) { moved = true; break; }
-            move1Spots.splice(j, 1);
+    }
+    doDefaults(pixel);
+},
+LIGHTWEIGHT: [
+    "XX|XX|XX",
+    "XX|FX%0.25|XX",
+    "M2%10|M1%10|M1%10",
+],
+SLIDE: [
+    "XX|XX|XX",
+    "XX|XX|M2 AND BO",
+    "XX|M1|M1",
+],
+AGLIQUID: [
+    "M1|M1|M1",
+    "M2|XX|M2",
+    "XX|XX|XX",
+],
+WALL: [
+    "XX|XX|XX",
+    "XX|XX|XX",
+    "XX|XX|XX",
+],
+UL_UR: [
+    "M1|M1|M1",
+    "M2|XX|M2",
+    "XX|M2|XX",
+],
+UL_UR_OPTIMIZED: function(pixel) {
+    if (pixel.start === pixelTicks) {return}
+    if (pixel.charge && elements[pixel.element].behaviorOn) {
+        pixelTick(pixel);
+        return;
+    }
+    var move1Spots = [0,1,-1]
+    var moved = false;
+    for (var i = 0; i < move1Spots.length; i++) {
+        const j = Math.random()*move1Spots.length | 0;
+        const coord = move1Spots[j];
+        if (tryMove(pixel, pixel.x+coord, pixel.y-1)) { moved = true; break; }
+        else { move1Spots.splice(j, 1);}
+    }
+    if (!moved && !pixel.del) {
+        var move2Spots = [
+            [0, 1],
+            [1, 0],
+            [-1, 0],
+        ]
+        for (var i = 0; i < move2Spots.length; i++) {
+            const j = Math.random()*move2Spots.length | 0;
+            const coords = move2Spots[j];
+            if (tryMove(pixel, pixel.x+coords[0], pixel.y+coords[1])) { break; }
+            else { move2Spots.splice(j, 1); }
         }
-        if (!moved) {
-            if (viscMove) {
-                if (Math.random() < 0.5) {
-                    if (!tryMove(pixel, pixel.x+1, pixel.y)) {
-                        tryMove(pixel, pixel.x-1, pixel.y);
-                    }
-                } else {
-                    if (!tryMove(pixel, pixel.x-1, pixel.y)) {
-                        tryMove(pixel, pixel.x+1, pixel.y);
-                    }
+    }
+    if (!pixel.del) { doDefaults(pixel); }
+},
+GAS_OLD: [
+    "M2|M1|M2",
+    "M1|XX|M1",
+    "M2|M1|M2",
+],
+GAS: function(pixel) {
+    if (pixel.start === pixelTicks) {return}
+    if (pixel.charge && elements[pixel.element].behaviorOn) {
+        pixelTick(pixel);
+        return;
+    }
+    let move1Spots = adjacentCoords.slice(0);
+    var moved = false;
+    for (var i = 0; i < move1Spots.length; i++) {
+        const j = Math.random()*move1Spots.length | 0;
+        const coords = move1Spots[j];
+        if (tryMove(pixel, pixel.x+coords[0], pixel.y+coords[1])) { moved = true; break; }
+        move1Spots.splice(j, 1);
+    }
+    if (!moved) {
+        let move2Spots = diagonalCoords.slice(0);
+        for (var i = 0; i < move2Spots.length; i++) {
+            const j = Math.random()*move2Spots.length | 0;
+            const coords = move2Spots[j];
+            if (tryMove(pixel, pixel.x+coords[0], pixel.y+coords[1])) { break; }
+            move2Spots.splice(j, 1);
+        }
+    }
+    doDefaults(pixel);
+},
+DGAS_OLD: [
+    "M2|M1|M2",
+    "M1|DL%5|M1",
+    "M2|M1|M2",
+],
+DGAS: function(pixel) {
+    if (Math.random() < 0.05) {
+        deletePixel(pixel.x,pixel.y);
+        return;
+    }
+    behaviors.GAS(pixel);
+},
+SUPPORT: [
+    "XX|XX|XX",
+    "SP|XX|SP",
+    "XX|M1|XX",
+],
+SUPPORTPOWDER: [
+    "XX|XX|XX",
+    "SP|XX|SP",
+    "M2|M1|M2",
+],
+DELETE: [
+    "XX|DL|XX",
+    "DL|XX|DL",
+    "XX|DL|XX",
+],
+FILL: [
+    "XX|CL|XX",
+    "CL|XX|CL",
+    "XX|CL|XX",
+],
+CLONER: [
+    "XX|CF|XX",
+    "CF|XX|CF",
+    "XX|CF|XX",
+],
+STURDYPOWDER_OLD: [
+    "XX|XX|XX",
+    "XX|XX|XX",
+    "XX|M1|XX",
+],
+STURDYPOWDER: function(pixel) {
+    if (pixel.start === pixelTicks) {return}
+    if (pixel.charge && elements[pixel.element].behaviorOn) {
+        pixelTick(pixel);
+        return;
+    }
+    tryMove(pixel,pixel.x,pixel.y+1);
+    doDefaults(pixel);
+},
+SELFDELETE: [
+    "XX|XX|XX",
+    "XX|DL|XX",
+    "XX|XX|XX",
+],
+FOAM: [
+    "XX|XX|XX",
+    "XX|DL%5|XX",
+    "M2%25|M1%25|M2%25",
+],
+BUBBLE: [
+    "XX|XX|XX",
+    "XX|DL%0.25 AND FX%1|M1%5",
+    "XX|M1%1|M1%2",
+],
+STICKY: [
+    "XX|ST|XX",
+    "ST|XX|ST",
+    "XX|ST AND M1|XX",
+],
+MOLTEN: function(pixel) {
+    if (Math.random() < 0.025 && isEmpty(pixel.x,pixel.y-1)) {
+        createPixel("fire",pixel.x,pixel.y-1);
+        pixelMap[pixel.x][pixel.y-1].temp = pixel.temp;
+        if (elements[pixel.element].fireColor) {
+            pixelMap[pixel.x][pixel.y-1].color = pixelColorPick(pixelMap[pixel.x][pixel.y-1],elements[pixel.element].fireColor);
+        }
+    }
+    behaviors.LIQUID(pixel);
+},
+MOLTEN_OLD: [
+    "XX|CR:fire%2.5|XX",
+    "M2|XX|M2",
+    "M1|M1|M1",
+],
+RADPOWDER: [
+    "XX|CR:radiation%1|XX",
+    "CR:radiation%1|XX|CR:radiation%1",
+    "M2|M1|M2",
+],
+RADMOLTEN: [
+    "XX|CR:fire,fire,fire,radiation%4.5|XX",
+    "M2 AND CR:radiation%1|XX|M2 AND CR:radiation%1",
+    "M1|M1|M1",
+],
+RADLIQUID: [
+    "XX|CR:radiation%2|XX",
+    "M2 AND CR:radiation%2|XX|M2 AND CR:radiation%2",
+    "M1|M1|M1",
+],
+BOUNCY: function(pixel) {
+    if (pixel.bx===undefined) {
+        // choose 1, 0, or -1
+        pixel.bx = Math.random() < 0.5 ? 1 : Math.random() < 0.5 ? 0 : -1;
+        pixel.by = Math.random() < 0.5 ? 1 : Math.random() < 0.5 ? 0 : -1;
+        // if both are 0, make one of them 1 or -1
+        if (pixel.bx===0 && pixel.by===0) {
+            if (Math.random() < 0.5) { pixel.bx = Math.random() < 0.5 ? 1 : -1; }
+            else { pixel.by = Math.random() < 0.5 ? 1 : -1; }
+        }
+    }
+    // move and invert direction if hit
+    if (!pixel.del && pixel.bx && !tryMove(pixel, pixel.x+pixel.bx, pixel.y)) { pixel.bx = -pixel.bx; }
+    if (!pixel.del && pixel.by && !tryMove(pixel, pixel.x, pixel.y+pixel.by)) { pixel.by = -pixel.by; }
+},
+FEEDPIXEL: function(pixel) {
+    if (!pixel.food) { pixel.food = 1 }
+    else { pixel.food ++ }
+    if (pixel.food > (elements[pixel.element].foodNeed||30)) {
+
+        let released;
+        if (elements[pixel.element].egg) {
+            released = releaseElement(pixel,elements[pixel.element].egg,1,true);
+        }
+        else {
+            released = releaseElement(pixel,"egg",1,true)
+            if (released) {
+                released.animal = elements[pixel.element].baby || pixel.element;
+                if (elements[pixel.element].eggColor) {
+                    released.color = pixelColorPick(released,elements[pixel.element].eggColor)
                 }
             }
         }
-        doDefaults(pixel);
-    },
-    SUPERFLUID_OLD: [
-        "XX|XX|XX",
-        "XX|XX|M2 AND BO",
-        "XX|M1|M2",
-    ],
-    SUPERFLUID: function(pixel) {
-        if (pixel.start === pixelTicks) {return}
-        if (pixel.charge && elements[pixel.element].behaviorOn) {
-            pixelTick(pixel);
-            return;
+        if (released) {
+            pixel.food = 0;
         }
-        if (!tryMove(pixel, pixel.x, pixel.y+1)) {
-            // go either left or right depending on pixel.flipX
-            var newx = pixel.flipX ? pixel.x-1 : pixel.x+1;
-            if (Math.random() < 0.5) {
-                if (!tryMove(pixel, newx, pixel.y)) {
-                    pixel.flipX = !pixel.flipX;
-                    tryMove(pixel, newx, pixel.y+1);
-                }
+    }
+},
+KILLPIXEL1: function(pixel) {
+    pixel.dead = true;
+},
+KILLPIXEL2: function(pixel1,pixel2) {
+    pixel2.dead = true;
+},
+FLY: function(pixel, onHit) {
+    var nx = pixel.flipX ? -1 : 1;
+    var ny = Math.random() < 0.5 ? -1 : 1;
+    var hit = false;
+    if (!tryMove(pixel, pixel.x+nx, pixel.y+ny)) {
+        if (!tryMove(pixel, pixel.x+nx, pixel.y-ny)) {
+            if (!tryMove(pixel, pixel.x, pixel.y+ny)) {
+                if (!tryMove(pixel, pixel.x, pixel.y-ny)) {hit=[pixel.x, pixel.y-ny]}
+            }else {hit=[pixel.x, pixel.y+ny]}
+        }else {hit=[pixel.x+nx, pixel.y-ny]}
+    }else {hit=[pixel.x+nx, pixel.y+ny]}
+    if (hit && onHit) {
+        if (!isEmpty(hit[0], hit[1], true)) {
+            onHit(pixel, pixelMap[hit[0]][hit[1]]);
+        }
+        else {onHit(pixel);}
+    }
+    if (pixel.del) {return}
+    if (!isEmpty(pixel.x+nx,pixel.y) || Math.random() < 0.02) {
+        pixel.flipX = !pixel.flipX;
+    }
+    if (pixel.charge && elements[pixel.element].behaviorOn) {
+        pixelTick(pixel)
+    }
+    doDefaults(pixel);
+},
+CRAWLER2: function(pixel,onHit,afterMove) {
+    var newX = 0; var newY = 0;
+    var floorX = 0; var floorY = 0;
+    if (pixel.r === undefined) { pixel.r = 0 }
+    if (pixel.climb === undefined) { pixel.climb = 0 }
+    if (pixel.r === 0) { newX = 1; floorY = 1; }
+    else if (pixel.r === 1) { newY = 1; floorX = 1; }
+    else if (pixel.r === 2) { newX = -1; floorY = 1; }
+    else if (pixel.r === 3) { newY = -1; floorX = 1;}
+    
+    if (!isEmpty(pixel.x-floorX,pixel.y-floorY)) {
+        if (!isEmpty(pixel.x+floorX,pixel.y+floorY) && Math.random() < 0.5) {}
+        else {
+            floorX = -floorX; floorY = -floorY;
+        }
+    }
+
+    if (!(isEmpty(pixel.x+floorX,pixel.y+floorY) && tryMove(pixel,pixel.x,pixel.y+1))) { // fall
+        pixel.climb++;
+        if (!tryMove(pixel,pixel.x+newX,pixel.y+newY) && !tryMove(pixel,pixel.x+newX,pixel.y+newY+(Math.random() < 0.5 ? 1 : -1))) { // hits wall
+            pixel.climb = 0;
+            if (onHit) { onHit(pixel,newX,newY); }
+            if (!isEmpty(pixel.x+newX,pixel.y+newY,true) && pixelMap[pixel.x+newX][pixel.y+newY].element === pixel.element) {
+                pixelMap[pixel.x+newX][pixel.y+newY].r = pixel.r;
             }
             else {
-                if (!tryMove(pixel, newx, pixel.y+1)) {
-                    if (!tryMove(pixel, newx, pixel.y)) { pixel.flipX = !pixel.flipX; }
-                }
+                pixel.r = Math.floor(Math.random() * 4);
             }
         }
-        doDefaults(pixel);
-    },
-    LIGHTWEIGHT: [
-        "XX|XX|XX",
-        "XX|FX%0.25|XX",
-        "M2%10|M1%10|M1%10",
-    ],
-    SLIDE: [
-        "XX|XX|XX",
-        "XX|XX|M2 AND BO",
-        "XX|M1|M1",
-    ],
-    AGLIQUID: [
-        "M1|M1|M1",
-        "M2|XX|M2",
-        "XX|XX|XX",
-    ],
-    WALL: [
-        "XX|XX|XX",
-        "XX|XX|XX",
-        "XX|XX|XX",
-    ],
-    UL_UR: [
-        "M1|M1|M1",
-        "M2|XX|M2",
-        "XX|M2|XX",
-    ],
-    UL_UR_OPTIMIZED: function(pixel) {
-        if (pixel.start === pixelTicks) {return}
-        if (pixel.charge && elements[pixel.element].behaviorOn) {
-            pixelTick(pixel);
-            return;
-        }
-        var move1Spots = [0,1,-1]
-        var moved = false;
-        for (var i = 0; i < move1Spots.length; i++) {
-            const j = Math.random()*move1Spots.length | 0;
-            const coord = move1Spots[j];
-            if (tryMove(pixel, pixel.x+coord, pixel.y-1)) { moved = true; break; }
-            else { move1Spots.splice(j, 1);}
-        }
-        if (!moved && !pixel.del) {
-            var move2Spots = [
-                [0, 1],
-                [1, 0],
-                [-1, 0],
-            ]
-            for (var i = 0; i < move2Spots.length; i++) {
-                const j = Math.random()*move2Spots.length | 0;
-                const coords = move2Spots[j];
-                if (tryMove(pixel, pixel.x+coords[0], pixel.y+coords[1])) { break; }
-                else { move2Spots.splice(j, 1); }
+        else if (pixel.r % 2 === 1) {
+            if (tryMove(pixel,pixel.x+floorX,pixel.y)) {
+                pixel.r = floorX < 0 ? 2 : 0;
+                pixel.climb = 0;
             }
         }
-        if (!pixel.del) { doDefaults(pixel); }
-    },
-    GAS_OLD: [
-        "M2|M1|M2",
-        "M1|XX|M1",
-        "M2|M1|M2",
-    ],
-    GAS: function(pixel) {
-        if (pixel.start === pixelTicks) {return}
-        if (pixel.charge && elements[pixel.element].behaviorOn) {
-            pixelTick(pixel);
-            return;
+        else if (tryMove(pixel,pixel.x,pixel.y+floorY)) {
+            pixel.r = floorY < 0 ? 3 : 1;
+            pixel.climb = 0;
         }
-        let move1Spots = adjacentCoords.slice(0);
-        var moved = false;
-        for (var i = 0; i < move1Spots.length; i++) {
-            const j = Math.random()*move1Spots.length | 0;
-            const coords = move1Spots[j];
-            if (tryMove(pixel, pixel.x+coords[0], pixel.y+coords[1])) { moved = true; break; }
-            move1Spots.splice(j, 1);
-        }
-        if (!moved) {
-            let move2Spots = diagonalCoords.slice(0);
-            for (var i = 0; i < move2Spots.length; i++) {
-                const j = Math.random()*move2Spots.length | 0;
-                const coords = move2Spots[j];
-                if (tryMove(pixel, pixel.x+coords[0], pixel.y+coords[1])) { break; }
-                move2Spots.splice(j, 1);
-            }
-        }
-        doDefaults(pixel);
-    },
-    DGAS_OLD: [
-        "M2|M1|M2",
-        "M1|DL%5|M1",
-        "M2|M1|M2",
-    ],
-    DGAS: function(pixel) {
-        if (Math.random() < 0.05) {
-            deletePixel(pixel.x,pixel.y);
-            return;
-        }
-        behaviors.GAS(pixel);
-    },
-    SUPPORT: [
-        "XX|XX|XX",
-        "SP|XX|SP",
-        "XX|M1|XX",
-    ],
-    SUPPORTPOWDER: [
-        "XX|XX|XX",
-        "SP|XX|SP",
-        "M2|M1|M2",
-    ],
-    DELETE: [
-        "XX|DL|XX",
-        "DL|XX|DL",
-        "XX|DL|XX",
-    ],
-    FILL: [
-        "XX|CL|XX",
-        "CL|XX|CL",
-        "XX|CL|XX",
-    ],
-    CLONER: [
-        "XX|CF|XX",
-        "CF|XX|CF",
-        "XX|CF|XX",
-    ],
-    STURDYPOWDER_OLD: [
-        "XX|XX|XX",
-        "XX|XX|XX",
-        "XX|M1|XX",
-    ],
-    STURDYPOWDER: function(pixel) {
-        if (pixel.start === pixelTicks) {return}
-        if (pixel.charge && elements[pixel.element].behaviorOn) {
-            pixelTick(pixel);
-            return;
-        }
-        tryMove(pixel,pixel.x,pixel.y+1);
-        doDefaults(pixel);
-    },
-    SELFDELETE: [
-        "XX|XX|XX",
-        "XX|DL|XX",
-        "XX|XX|XX",
-    ],
-    FOAM: [
-        "XX|XX|XX",
-        "XX|DL%5|XX",
-        "M2%25|M1%25|M2%25",
-    ],
-    BUBBLE: [
-        "XX|XX|XX",
-        "XX|DL%0.25 AND FX%1|M1%5",
-        "XX|M1%1|M1%2",
-    ],
-    STICKY: [
-        "XX|ST|XX",
-        "ST|XX|ST",
-        "XX|ST AND M1|XX",
-    ],
-    MOLTEN: function(pixel) {
-        if (Math.random() < 0.025 && isEmpty(pixel.x,pixel.y-1)) {
-            createPixel("fire",pixel.x,pixel.y-1)
-            if (elements[pixel.element].fireColor) {
-                pixelMap[pixel.x][pixel.y-1].color = pixelColorPick(pixelMap[pixel.x][pixel.y-1],elements[pixel.element].fireColor);
-            }
-        }
-        behaviors.LIQUID(pixel);
-    },
-    MOLTEN_OLD: [
-        "XX|CR:fire%2.5|XX",
-        "M2|XX|M2",
-        "M1|M1|M1",
-    ],
-    RADPOWDER: [
-        "XX|CR:radiation%1|XX",
-        "CR:radiation%1|XX|CR:radiation%1",
-        "M2|M1|M2",
-    ],
-    RADMOLTEN: [
-        "XX|CR:fire,fire,fire,radiation%4.5|XX",
-        "M2 AND CR:radiation%1|XX|M2 AND CR:radiation%1",
-        "M1|M1|M1",
-    ],
-    RADLIQUID: [
-        "XX|CR:radiation%2|XX",
-        "M2 AND CR:radiation%2|XX|M2 AND CR:radiation%2",
-        "M1|M1|M1",
-    ],
-    BOUNCY: function(pixel) {
-        if (pixel.bx===undefined) {
-            // choose 1, 0, or -1
-            pixel.bx = Math.random() < 0.5 ? 1 : Math.random() < 0.5 ? 0 : -1;
-            pixel.by = Math.random() < 0.5 ? 1 : Math.random() < 0.5 ? 0 : -1;
-            // if both are 0, make one of them 1 or -1
-            if (pixel.bx===0 && pixel.by===0) {
-                if (Math.random() < 0.5) { pixel.bx = Math.random() < 0.5 ? 1 : -1; }
-                else { pixel.by = Math.random() < 0.5 ? 1 : -1; }
-            }
-        }
-        // move and invert direction if hit
-        if (!pixel.del && pixel.bx && !tryMove(pixel, pixel.x+pixel.bx, pixel.y)) { pixel.bx = -pixel.bx; }
-        if (!pixel.del && pixel.by && !tryMove(pixel, pixel.x, pixel.y+pixel.by)) { pixel.by = -pixel.by; }
-    },
-    FEEDPIXEL: function(pixel) {
-        if (!pixel.food) { pixel.food = 1 }
-        else { pixel.food ++ }
-        if (pixel.food > (elements[pixel.element].foodNeed||30)) {
-            // loop through adjacentCoords and check each pixel to lay an egg
-            for (var i = 0; i < adjacentCoords.length; i++) {
-                var x = pixel.x+adjacentCoords[i][0];
-                var y = pixel.y+adjacentCoords[i][1];
-                if (isEmpty(x, y)) {
-                    if (elements[pixel.element].egg) {
-                        createPixel(elements[pixel.element].egg,x,y)
-                    }
-                    else {
-                        createPixel("egg",x,y)
-                        pixelMap[x][y].animal = elements[pixel.element].baby || pixel.element;
-                        if (elements[pixel.element].eggColor) {
-                            pixelMap[x][y].color = pixelColorPick(pixelMap[x][y],elements[pixel.element].eggColor)
-                        }
-                    }
-                    pixel.food = 0;
-                    break;
-                }
-            }
-        }
-    },
-    KILLPIXEL1: function(pixel) {
-        pixel.dead = true;
-    },
-    KILLPIXEL2: function(pixel1,pixel2) {
-        pixel2.dead = true;
-    },
-    FLY: function(pixel, onHit) {
-        var nx = pixel.flipX ? -1 : 1;
-        var ny = Math.random() < 0.5 ? -1 : 1;
-        var hit = false;
-        if (!tryMove(pixel, pixel.x+nx, pixel.y+ny)) {
-            if (!tryMove(pixel, pixel.x+nx, pixel.y-ny)) {
-                if (!tryMove(pixel, pixel.x, pixel.y+ny)) {
-                    if (!tryMove(pixel, pixel.x, pixel.y-ny)) {hit=[pixel.x, pixel.y-ny]}
-                }else {hit=[pixel.x, pixel.y+ny]}
-            }else {hit=[pixel.x+nx, pixel.y-ny]}
-        }else {hit=[pixel.x+nx, pixel.y+ny]}
-        if (hit && onHit) {
-            if (!isEmpty(hit[0], hit[1], true)) {
-                onHit(pixel, pixelMap[hit[0]][hit[1]]);
-            }
-            else {onHit(pixel);}
-        }
-        if (pixel.del) {return}
-        if (!isEmpty(pixel.x+nx,pixel.y) || Math.random() < 0.02) {
-            pixel.flipX = !pixel.flipX;
-        }
-        if (pixel.charge && elements[pixel.element].behaviorOn) {
-            pixelTick(pixel)
-        }
-        doDefaults(pixel);
-    },
-    CRAWLER: function(pixel) {
-        if (Math.random() < 0.08) { // flip
-            pixel.flipX = !pixel.flipX;
-        }
-        var dir = pixel.flipX ? -1 : 1;
-        var dirY = pixel.flipY ? -1 : 1;
-        if (!tryMove(pixel,pixel.x,pixel.y+dirY)) { // fall or climb
-            if (!tryMove(pixel,pixel.x+dir,pixel.y)) { // hits wall
-                if (!pixel.hilled && !isEmpty(pixel.x+dir,pixel.y,true) && pixelMap[pixel.x+dir][pixel.y].element === "ant_wall") {
-                    pixel.hilled = true;
-                }
-                tryMove(pixel,pixel.x+dir,pixel.y + (Math.random() < 0.25 ? 1 : -1));
-            }
-            if (Math.random() < 0.01 && !isEmpty(pixel.x+dir,pixel.y+1,true) && eLists.CRAWLTHRU.indexOf(pixelMap[pixel.x+dir][pixel.y+1].element) !== -1) {
-                if (!pixel.hilled || !isEmpty(pixel.x+dir,pixel.y,true) && pixelMap[pixel.x+dir][pixel.y].element === "ant_wall") {
-                    var wallCoords = [
-                        [-1,-1],[1,-1],
-                        [-1,0],[1,0],
-                        [0,1]
-                    ];
-                    if (!isEmpty(pixel.x,pixel.y-2)) {
-                        wallCoords.push([0,-1])
-                    }
-                    if (Math.random() < 0.15) { wallCoords.push([-1,1]) }
-                    if (Math.random() < 0.15) { wallCoords.push([1,1]) }
-                    // loop through wallCoords, change pixel to ant_wall if in crawlthru
-                    for (var i = 0; i < wallCoords.length; i++) {
-                        var x = pixel.x+dir+wallCoords[i][0];
-                        var y = pixel.y+1+wallCoords[i][1];
-                        if (!isEmpty(x,y,true) && eLists.CRAWLTHRU.indexOf(pixelMap[x][y].element) !== -1) {
-                            changePixel(pixelMap[x][y],"ant_wall");
-                        }
-                    }
-                    deletePixel(pixel.x+dir,pixel.y+1);
-                    tryMove(pixel,pixel.x+dir,pixel.y+1);
-                }
-            }
-            else if (Math.random() < 0.08 && !isEmpty(pixel.x+dir,pixel.y-1,true) && eLists.CRAWLTHRU.indexOf(pixelMap[pixel.x+dir][pixel.y-1].element) !== -1) {
-                swapPixels(pixel,pixelMap[pixel.x+dir][pixel.y-1]);
-            }
-        }
-        doDefaults(pixel);
-    },
-    ABSORB: function(pixel,limit=100,rate=0.1) {
-        for (var i = 0; i < adjacentCoords.length; i++) {
-            var coords = adjacentCoords[i];
-            var x = pixel.x + coords[0];
-            var y = pixel.y + coords[1];
-            if (!isEmpty(x,y,true)) {
-                var newPixel = pixelMap[x][y];
-                if (newPixel.element === pixel.element) {
-                    var avg = ((pixel.moist||0) + (newPixel.moist||0))/2;
-                    pixel.moist = avg;
-                    newPixel.moist = avg;
-                }
-                else if (elements[pixel.element].reactions[newPixel.element] && (!elements[pixel.element].reactions[newPixel.element].elem2 || elements[pixel.element].reactions[newPixel.element].tempMin) && (pixel.moist||0) < limit && Math.random() < rate) {
-                    deletePixel(x,y);
-                    pixel.moist++;
-                }
-            }
-            else if (pixel.moist >= 1 && pixel.temp > 100 && !outOfBounds(x,y) && Math.random() < 0.1) {
-                createPixel("steam",x,y);
-                pixel.moist--;
-            }
-        }
-    },
-    RELEASE_MOISTURE: function(pixel) {
-        for (var i = 0; i < adjacentCoords.length; i++) {
-            var coords = adjacentCoords[i];
-            var x = pixel.x + coords[0];
-            var y = pixel.y + coords[1];
-            if (isEmpty(x,y) && pixel.moist >= 1) {
-                createPixel("water",x,y);
-                pixel.moist--;
-            }
-        }
-    },
-    DO_TICK: function(pixel) {
-        if (elements[pixel.element].tick1) {
-            elements[pixel.element].tick1(pixel); return;
-        }
-        elements[pixel.element].tick(pixel);
+        if (afterMove) { afterMove(pixel,newX,newY); }
     }
+    else {
+        pixel.r = Math.random() < 0.5 ? 0 : 2;
+        pixel.climb = 0;
+    }
+    doDefaults(pixel);
+},
+CRAWLER: function(pixel) {},
+ABSORB: function(pixel,limit=100,rate=0.1) {
+    if (pixel.moist === undefined) { pixel.moist = 0 }
+    for (var i = 0; i < adjacentCoords.length; i++) {
+        var coords = adjacentCoords[i];
+        var x = pixel.x + coords[0];
+        var y = pixel.y + coords[1];
+        if (!isEmpty(x,y,true)) {
+            var newPixel = pixelMap[x][y];
+            if (newPixel.element === pixel.element) {
+                var avg = ((pixel.moist||0) + (newPixel.moist||0))/2;
+                pixel.moist = avg;
+                newPixel.moist = avg;
+            }
+            else if (elements[pixel.element].reactions[newPixel.element] && (!elements[pixel.element].reactions[newPixel.element].elem2 || elements[pixel.element].reactions[newPixel.element].tempMin) && (pixel.moist||0) < limit && Math.random() < rate) {
+                deletePixel(x,y);
+                pixel.moist++;
+            }
+        }
+        else if (pixel.moist >= 1 && pixel.temp > 100 && !outOfBounds(x,y) && Math.random() < 0.1) {
+            createPixel("steam",x,y);
+            pixel.moist--;
+        }
+    }
+},
+RELEASE_MOISTURE: function(pixel) {
+    if (pixel.moist === undefined) { pixel.moist = 0 }
+    for (var i = 0; i < adjacentCoords.length; i++) {
+        var coords = adjacentCoords[i];
+        var x = pixel.x + coords[0];
+        var y = pixel.y + coords[1];
+        if (isEmpty(x,y) && pixel.moist >= 1) {
+            createPixel("water",x,y);
+            pixel.moist--;
+        }
+    }
+},
+DO_TICK: function(pixel) {
+    if (elements[pixel.element].tick1) {
+        elements[pixel.element].tick1(pixel); return;
+    }
+    elements[pixel.element].tick(pixel);
+},
+SEEDRISE: function(pixel) {
+    if (Math.random() < 0.02) {
+        let x = 0;
+        if (Math.random() < 0.25) {
+            x += Math.random() < 0.5 ? -1 : 1;
+        }
+        if (!isEmpty(pixel.x+x,pixel.y-1,true) && eLists.SOIL.includes(pixelMap[pixel.x+x][pixel.y-1].element)) {
+            let soil = pixelMap[pixel.x+x][pixel.y-1];
+            swapPixels(pixel,soil);
+            changePixel(soil,"fiber");
+        }
+    }
+}
         }
         textures = {
             BRICK: [
-            "rrrrrwrrrrr",
-            "rrrrrwrrrrr",
+            "llllrwlllll",
+            "rrrrdwlrrrr",
+            "dddddwrdddd",
             "wwwwwwwwwww",
-            "rrwrrrrrwrr",
-            "rrwrrrrrwrr",
+            "lrwllllrwll",
+            "rdwlrrrdwlr",
+            "ddwrddddwrd",
             "wwwwwwwwwww",
-            "rrrrrrwrrrr",
-            "rrrrrrwrrrr",
+            "lllllrwllll",
+            "rrrrrdwlrrr",
+            "ddddddwrddd",
             "wwwwwwwwwww",
-            "rrrrwrrrrwr",
-            "rrrrwrrrrwr",
+            "lllrwlllrwl",
+            "rrrdwlrrdwl",
+            "ddddwrdddwr",
             "wwwwwwwwwww"],
             GLASS: [ // solid with streaks
             "gggggggggggg",
@@ -609,6 +632,7 @@
         renderPresets = {
             HEATGLOW: function(pixel,ctx) {
                 drawDefault(ctx,pixel);
+                if (!viewInfo[view].colorEffects) { return }
                 var max = elements[pixel.element].tempHigh;
                 var ratio = ((pixel.temp/max*100)|0)/100;
                 if (ratio < 0.2) { return }
@@ -618,6 +642,7 @@
             },
             WOODCHAR: function(pixel,ctx) {
                 drawDefault(ctx,pixel);
+                if (!viewInfo[view].colorEffects) { return }
                 var max = 400;
                 var ratio = ((pixel.temp/max*100)|0)/100;
                 if (ratio < 0.5) { return }
@@ -626,6 +651,7 @@
             },
             PLANTCHAR: function(pixel,ctx) {
                 drawDefault(ctx,pixel);
+                if (!viewInfo[view].colorEffects) { return }
                 var max = 80;
                 var ratio = ((pixel.temp/max*100)|0)/100;
                 if (ratio < 0.5) { return }
@@ -634,17 +660,18 @@
             },
             CHARCOALHEAT: function(pixel,ctx) {
                 drawDefault(ctx,pixel);
+                if (!viewInfo[view].colorEffects) { return }
                 var max = 1100;
                 var ratio = ((pixel.temp/max*100)|0)/100;
                 if (ratio < 0.4) { return }
                 if (ratio > 1) { ratio = 1 }
-                drawSquare(ctx,"hsl("+ratio*20+",100%,"+Math.min(90,ratio*50)+"%)",pixel.x,pixel.y,undefined,Math.min(0.7,(ratio-0.4)*0.7));
+                drawSquare(ctx,"hsl("+ratio*20+",100%,"+Math.min(90,ratio*70)+"%)",pixel.x,pixel.y,undefined,Math.min(0.7,(ratio-0.4)*0.7));
             },
             HUESHIFT: function(pixel,ctx) {
                 if (!pixel.origColor && pixel.color.match(/^rgb/)) {
                     pixel.origColor = pixel.color.match(/\d+/g);
                 }
-                if (!pixel.origColor || view) {
+                if (!pixel.origColor || !viewInfo[view].effects) {
                     drawDefault(ctx,pixel);
                     return;
                 }
@@ -653,6 +680,33 @@
                 hsl[0] -= Math.min(30,(pixelTicks-pixel.start)/1.5)/360;
                 hsl = "hsl("+hsl[0]*360+","+hsl[1]*100+"%,"+hsl[2]*100+"%)";
                 drawPlus(ctx,hsl,pixel.x,pixel.y);
+            },
+            BORDER: function(pixel,ctx) {
+                if (!viewInfo[view].colorEffects) { drawDefault(ctx,pixel); return }
+                renderPresets.HEATGLOW(pixel,ctx);
+                if (pixel.alpha === 0) return;
+                let edge = false;
+                for (var i = 0; i < adjacentCoords.length; i++) {
+                    var coords = adjacentCoords[i];
+                    var x = pixel.x + coords[0];
+                    var y = pixel.y + coords[1];
+                    if (isEmpty(x,y) || (!outOfBounds(x,y) && elements[pixelMap[x][y].element].movable != elements[pixel.element].movable)) {
+                        edge = true;
+                        break;
+                    }
+                }
+                if (edge) { drawSquare(ctx,"rgba(255,255,255,"+(pixel.alpha||1)/4+")",pixel.x,pixel.y) }
+            },
+            LED: function(pixel,ctx) {
+                if (!viewInfo[view].colorEffects) { drawDefault(ctx,pixel); return }
+                let alpha = (pixel.alpha??1);
+                if (!pixel.charge && !pixel.chargeCD) {
+                    alpha -= 0.75;
+                    alpha = Math.max(0,alpha);
+                    if (alpha === 0) return;
+                }
+                else { alpha = 1 }
+                drawSquare(ctx,pixel.color,pixel.x,pixel.y,undefined,alpha);
             }
         }
         eLists = {
@@ -841,6 +895,7 @@
         "SW|DL%5|SW",
         "SW|SW|SW",
     ],
+    tool: function(pixel){},
     category: "tools",
     darkText: true,
     canPlace: false,
@@ -867,7 +922,7 @@
     canPlace: false,
     desc: "Use on a pixel to bring up its info screen."
 },
-"shock": { //hard-coded
+"shock": {
     color: "#ffff00",
     behavior: [
         "SH|SH|SH",
@@ -1006,6 +1061,7 @@
         "bee": { elem2:"dead_bug", chance:0.05, oneway:true },
         "stink_bug": { elem2:"dead_bug", chance:0.1, oneway:true },
         "cured_meat": { elem1:"salt_water", elem2:"meat" },
+        "water": { elem2:"bubble", attr2:{"clone":"water"}, chance:0.001, tempMin:85 },
         // electrolysis:
         "aluminum": { elem1:["hydrogen","hydrogen","oxygen"], charged:true, chance:0.0025 },
         "zinc": { elem1:["hydrogen","hydrogen","oxygen"], charged:true, chance:0.015 },
@@ -1059,6 +1115,7 @@
                 pixel.clone = "salt_water";
             }
         }},
+        "salt_water": { elem2:"bubble", attr2:{"clone":"salt_water"}, chance:0.001, tempMin:85 },
         // electrolysis:
         "aluminum": { elem1:["hydrogen","hydrogen","oxygen","chlorine"], charged:true, chance:0.0025 },
         "zinc": { elem1:["hydrogen","hydrogen","oxygen","chlorine"], charged:true, chance:0.015 },
@@ -1105,6 +1162,7 @@
         "bee": { elem2:"dead_bug", chance:0.05, oneway:true },
         "stink_bug": { elem2:"dead_bug", chance:0.1, oneway:true },
         "uranium": { elem1: "dirty_water", chance:0.25 },
+        "sugar_water": { elem2:"bubble", attr2:{"clone":"sugar_water"}, chance:0.001, tempMin:85 },
         // electrolysis:
         "aluminum": { elem1:["hydrogen","hydrogen","oxygen","sugar"], charged:true, chance:0.0025 },
         "zinc": { elem1:["hydrogen","hydrogen","oxygen","sugar"], charged:true, chance:0.015 },
@@ -1151,6 +1209,7 @@
         "algae": { elem1:"water" },
         "kelp": { elem1:"water" },
         "uranium": { elem1: "dirty_water", chance:0.25 },
+        "seltzer": { elem2:"bubble", attr2:{"clone":"seltzer"}, chance:0.001, tempMin:85 },
         // electrolysis:
         "aluminum": { elem1:["hydrogen","hydrogen","oxygen","carbon_dioxide"], charged:true, chance:0.0025 },
         "zinc": { elem1:["hydrogen","hydrogen","oxygen","carbon_dioxide"], charged:true, chance:0.015 },
@@ -1191,7 +1250,8 @@
         "fly": { elem2:"dead_bug", chance:0.1, oneway:true },
         "firefly": { elem2:"dead_bug", chance:0.1, oneway:true },
         "bee": { elem2:"dead_bug", chance:0.05, oneway:true },
-        "stink_bug": { elem2:"dead_bug", chance:0.1, oneway:true }
+        "stink_bug": { elem2:"dead_bug", chance:0.1, oneway:true },
+        "dirty_water": { elem2:"bubble", attr2:{"clone":"water"}, chance:0.001, tempMin:85 },
     },
     hidden: true,
     state: "liquid",
@@ -1246,6 +1306,7 @@
         "antibody": { elem2:null, chance:0.01 },
         "poison": { elem2:null, chance:0.01 },
         "charcoal": { elem1:"water", chance:0.02 },
+        "pool_water": { elem2:"bubble", attr2:{"clone":"pool_water"}, chance:0.001, tempMin:85 },
     },
     hidden: true,
     state: "liquid",
@@ -1301,6 +1362,9 @@
     },
     tempHigh: 100,
     stateHigh: "mudstone",
+    onStateHigh: function(pixel) {
+        releaseElement(pixel,"steam");
+    },
     tempLow: -50,
     stateLow: "permafrost",
     category: "land",
@@ -1318,6 +1382,9 @@
     },
     tempHigh: 100,
     stateHigh: "packed_sand",
+    onStateHigh: function(pixel) {
+        releaseElement(pixel,"steam");
+    },
     tempLow: -50,
     stateLow: "packed_sand",
     category: "land",
@@ -1523,8 +1590,9 @@
     reactions: {
         "wood": { elem1:"lichen" },
         "chlorine": { elem1:"dead_plant", elem2:null, chance:0.035 },
-        "liquid_chlorine": { elem1:"dead_plant", elem2:null, chance:0.035 },
         "baking_soda": { elem1:"dead_plant", elem2:null, chance:0.035 },
+        "bleach": { elem1:"dead_plant", elem2:null, chance:0.035 },
+        "mercury": { elem1:"dead_plant", elem2:null, chance:0.035 },
         "broth": { elem2:"water", chance:0.05 },
         "tea": { elem2:"water", chance:0.05 },
         "nitrogen": { elem2:"algae", chance:0.05 },
@@ -1560,7 +1628,8 @@
     category: "solids",
     insulate: true,
     hardness: 1,
-    noMix: true
+    noMix: true,
+    alias: "solid"
 },
 "fire": {
     color: ["#ff6b21","#ffa600","#ff4000"],
@@ -1568,6 +1637,12 @@
         behaviors.UL_UR_OPTIMIZED(pixel);
         if (!pixel.del && settings.burn===0 && (pixelTicks-pixel.start > 70) && Math.random() < 0.1 ) { changePixel(pixel,"smoke") }
     },
+    tool: function(pixel) {
+        if (pixel.temp >= elements.fire.temp || elements[pixel.element].insulate) {return;}
+        pixel.temp += elements.fire.temp/(elements[pixel.element].extinguish ? 240 : 60);
+        pixelTempCheck(pixel);
+    },
+    canPlace: true,
     renderer: renderPresets.HUESHIFT,
     reactions: {
         "water": { elem1: "smoke" },
@@ -1612,6 +1687,11 @@
 "steam": {
     color: "#abd6ff",
     behavior: behaviors.GAS,
+    tick: function(pixel) {
+        if (pixel.temp > 3000 && Math.random() < 0.01) {
+            changePixel(pixel,Math.random() < 0.5 ? "hydrogen" : "oxygen");
+        }
+    },
     reactions: {
         "steam": { elem1: "cloud", elem2: "cloud", chance:0.05, "y":[0,15], "setting":"clouds" },
         "rain_cloud": { elem1: "rain_cloud", chance:0.4, "y":[0,12], "setting":"clouds" },
@@ -1808,6 +1888,12 @@
         "M2|CH:smoke%8|M2",
         "XX|M2|XX",
     ],
+    tool: function(pixel) {
+        if (pixel.temp <= elements.cold_fire.temp || elements[pixel.element].insulate) {return;}
+        pixel.temp += elements.cold_fire.temp/(elements[pixel.element].extinguish ? 240 : 60);
+        pixelTempCheck(pixel);
+    },
+    canPlace: true,
     reactions: {
         "fire": { elem1: "smoke", elem2: "smoke" },
         "plasma": { elem1: "light", elem2: "light" },
@@ -1829,6 +1915,7 @@
         "g": "#5e807d",
         "s": "#638f8b",
         "S": "#679e99"},
+    renderer: renderPresets.BORDER,
     behavior: behaviors.WALL,
     reactions: {
         "radiation": { elem1:"rad_glass", chance:0.33 },
@@ -1840,7 +1927,8 @@
     state: "solid",
     density: 2500,
     breakInto: "glass_shard",
-    noMix: true
+    noMix: true,
+    grain: 0
 },
 "molten_glass": {
     reactions: {
@@ -1848,7 +1936,8 @@
         "rad_steam": { elem1:"molten_rad_glass", elem2:null, chance:0.33 },
         "molten_uranium": { elem1:"molten_rad_glass", elem2:null },
         "fallout": { elem1:"molten_rad_glass", elem2:"radiation" }
-    }
+    },
+    grain: 0
 },
 "molten_rad_glass": {
     behavior: behaviors.RADMOLTEN,
@@ -1860,6 +1949,7 @@
         "g": "#648c64",
         "s": "#679D74",
         "S": "#6aad83"},
+    renderer: renderPresets.BORDER,
     behavior: [
         "XX|CR:radiation%0.075|XX",
         "CR:radiation%0.075|XX|CR:radiation%0.075",
@@ -1871,7 +1961,8 @@
     density: 2500,
     breakInto: "rad_shard",
     hidden: true,
-    noMix: true
+    noMix: true,
+    grain: 0.3
 },
 "meat": {
     color: ["#9e4839","#ba6449","#d2856c","#a14940"],
@@ -1981,7 +2072,7 @@
     color: ["#ae7d5b","#9b6d54","#7e4d31"],
     behavior: behaviors.STURDYPOWDER,
     tick: function(pixel) {
-        if (pixel.temp > 100 && Math.random() < 0.0025 && isEmpty(pixel.x,pixel.y-1)) {
+        if (pixel.temp > 150 && Math.random() < 0.0025 && isEmpty(pixel.x,pixel.y-1)) {
             changePixel(pixel,"grease")
         }
     },
@@ -2164,6 +2255,9 @@
     tick: function(pixel) {
         changePixel(pixel,randomChoices[Math.floor(Math.random() * randomChoices.length)]);
     },
+    onPlace: function(pixel) {
+        changePixel(pixel,randomChoices[Math.floor(Math.random() * randomChoices.length)]);
+    },
     category: "special",
     excludeRandom: true
 },
@@ -2278,11 +2372,18 @@
 "smash": {
     color: ["#666666","#888888","#666666"],
     tool: function(pixel) {
+        let old = pixel.element;
         if (elements[pixel.element].breakInto || elements[pixel.element].onBreak) {
             // times 0.25 if not shiftDown else 1
             if (Math.random() < (elements[pixel.element].hardness || 1) * (shiftDown ? 1 : 0.25)) {
                 breakPixel(pixel);
             }
+        }
+        else if (old === pixel.element && elements[pixel.element].movable && !isEmpty(pixel.x,pixel.y+1) && !paused) {
+            let x = 0; let y = 0;
+            if (Math.random() < 0.66) x = Math.random() < 0.5 ? 1 : -1;
+            if (Math.random() < 0.66) y = Math.random() < 0.5 ? 1 : -1;
+            tryMove(pixel,pixel.x+x,pixel.y+y)
         }
     },
     category: "tools",
@@ -2406,7 +2507,8 @@
     },
     category:"special",
     hardness: 1,
-    excludeRandom: true
+    excludeRandom: true,
+    movable: false
 },
 "sun": {
     color: "#ffffbd",
@@ -2569,7 +2671,8 @@
         "firefly": { elem2:"plague", chance:0.05 },
         "chlorine": { elem1:null },
         "liquid_chlorine": { elem1:null },
-        "light": { elem1:null }
+        "light": { elem1:null },
+        "head": { stain2:"#546e00" }
     },
     tempHigh: 300,
     stateHigh: null,
@@ -2591,12 +2694,13 @@
         "root": { elem2:"dirt", chance:0.1, func:behaviors.FEEDPIXEL },
         "dead_plant": { elem2:"dirt", chance:0.1, func:behaviors.FEEDPIXEL },
         "tinder": { elem2:[null,"dirt"], chance:0.1, func:behaviors.FEEDPIXEL },
-        "sawdust": { elem2:null, chance:0.1, func:behaviors.FEEDPIXEL },
+        "sawdust": { elem2:[null,null,null,null,"dirt"], chance:0.1, func:behaviors.FEEDPIXEL },
         "dust": { elem2:null, chance:0.1, func:behaviors.FEEDPIXEL },
         "rotten_meat": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
         "dead_bug": { elem2:"dirt", chance:0.1, func:behaviors.FEEDPIXEL },
         "hyphae": { elem2:"mycelium", chance:0.1, func:behaviors.FEEDPIXEL },
         "plant": { elem2:"dirt", chance:0.01, func:behaviors.FEEDPIXEL },
+        "fiber": { elem2:"dirt", chance:0.01, func:behaviors.FEEDPIXEL },
         "evergreen": { elem2:"dirt", chance:0.01, func:behaviors.FEEDPIXEL },
         "herb": { elem2:"dirt", chance:0.1, func:behaviors.FEEDPIXEL },
         "rice": { elem2:"dirt", chance:0.01, func:behaviors.FEEDPIXEL },
@@ -2713,7 +2817,41 @@
 },
 "ant": {
     color: "#5e0b04",
-    behavior: behaviors.CRAWLER,
+    behavior: function(pixel){
+        behaviors.CRAWLER2(pixel,function(pixel,newX,newY){
+    if (!pixel.hilled && !isEmpty(pixel.x+newX,pixel.y,true) && pixelMap[pixel.x+newX][pixel.y].element === "ant_wall") {
+        pixel.hilled = true;
+    }
+},function(pixel,newX,newY){
+    if (Math.random() < 0.01 && !isEmpty(pixel.x+newX,pixel.y+1,true) && eLists.CRAWLTHRU.indexOf(pixelMap[pixel.x+newX][pixel.y+1].element) !== -1) {
+        if (!pixel.hilled || !isEmpty(pixel.x+newX,pixel.y,true) && pixelMap[pixel.x+newX][pixel.y].element === "ant_wall") {
+            var wallCoords = [
+                [-1,-1],[1,-1],
+                [-1,0],[1,0],
+                [0,1]
+            ];
+            if (!isEmpty(pixel.x,pixel.y-2)) {
+                wallCoords.push([0,-1])
+            }
+            if (Math.random() < 0.15) { wallCoords.push([-1,1]) }
+            if (Math.random() < 0.15) { wallCoords.push([1,1]) }
+            // loop through wallCoords, change pixel to ant_wall if in crawlthru
+            for (var i = 0; i < wallCoords.length; i++) {
+                var x = pixel.x+newX+wallCoords[i][0];
+                var y = pixel.y+1+wallCoords[i][1];
+                if (!isEmpty(x,y,true) && eLists.CRAWLTHRU.indexOf(pixelMap[x][y].element) !== -1) {
+                    changePixel(pixelMap[x][y],"ant_wall");
+                }
+            }
+            deletePixel(pixel.x+newX,pixel.y+1);
+            tryMove(pixel,pixel.x+newX,pixel.y+1);
+        }
+    }
+    else if (Math.random() < 0.08 && !isEmpty(pixel.x+newX,pixel.y-1,true) && eLists.CRAWLTHRU.indexOf(pixelMap[pixel.x+newX][pixel.y-1].element) !== -1) {
+        swapPixels(pixel,pixelMap[pixel.x+newX][pixel.y-1]);
+    }
+})
+    },
     // behavior: [
     //     "XX|XX|SW:dirt,sand,gravel,clay_soil,mulch%8",
     //     "XX|FX%8|M2 AND BO",
@@ -2731,6 +2869,7 @@
         "rotten_meat": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
         "crumb": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
         "cheese": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
+        "cheese_powder": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
         "rotten_cheese": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
         "dead_bug": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
         "vinegar": { elem1:"dead_bug", elem2:null },
@@ -2753,7 +2892,96 @@
     burnTime:25,
     state: "solid",
     density: 500,
-    conduct: 0.15
+    conduct: 0.05
+},
+"spider": {
+    color: "#4f2d2d",
+    behavior: function(pixel){
+        var webs = [];
+        shuffleArray(squareCoordsShuffle)
+        for (var i = 0; i < squareCoordsShuffle.length; i++) {
+            var coord = squareCoordsShuffle[i];
+            var x = pixel.x+coord[0];
+            var y = pixel.y+coord[1];
+            if (!isEmpty(x,y,true) && elements[pixelMap[x][y].element].id === elements.web.id) {
+                webs.push(pixelMap[x][y]);
+                if (pixel.web === undefined) { pixel.web = Math.floor(Math.random() * (5 - 1) + 1) }
+            }
+        }
+        if (webs.length) {
+            if (Math.random() < 0.1) {
+                var web = choose(webs);
+                shuffleArray(squareCoordsShuffle);
+                for (var i = 0; i < squareCoordsShuffle.length; i++) {
+                    var coord = squareCoordsShuffle[i];
+                    var x = web.x+coord[0];
+                    var y = web.y+coord[1];
+                    if (webs.length === 1 && coord[0] && coord[1] && isEmpty(x,y) && Math.random() < 0.1) {
+                        createPixel("web",x,y);
+                        break;
+                    }
+                    else if (tryMove(pixel,x,y)) { break }
+                }
+            }
+            doDefaults(pixel);
+        }
+        else {
+            behaviors.CRAWLER2(pixel,undefined,function(pixel){
+                if (pixel.r % 2 === 1 && pixel.climb > 10 && pixel.web === undefined && Math.random() < 0.1) {
+                    if (tryMove(pixel,pixel.x,pixel.y-1,"web")) {
+                        pixel.web = Math.floor(Math.random() * (50 - 10) + 10);
+                    }
+                }
+            });
+        }
+    },
+    foodNeed: 4,
+    reactions: {
+        "dead_bug": { elem2:null, chance:0.1, func:behaviors.FEEDPIXEL },
+        "bleach": { elem1:"dead_bug", chance:0.1 },
+        "alcohol": { elem1:"dead_bug", chance:0.05 },
+        "vinegar": { elem1:"dead_bug", chance:0.03 },
+    },
+    tempHigh: 100,
+    stateHigh: "ash",
+    tempLow: 0,
+    stateLow: "dead_bug",
+    breakInto: "dead_bug",
+    category:"life",
+    burn:95,
+    burnTime:25,
+    state: "solid",
+    density: 500,
+    conduct: 0.05,
+    cooldown: defaultCooldown
+},
+"web": {
+    color: ["#d7d9d1","#c0c3b6","#a8ac9a"],
+    behavior: behaviors.WALL,
+    reactions: {
+        "fly": { elem2:"dead_bug", chance:0.1 },
+        "flea": { elem2:"dead_bug", chance:0.1 },
+        "termite": { elem2:"dead_bug", chance:0.05 },
+        "ant": { elem2:"dead_bug", chance:0.05 },
+        "firefly": { elem2:"dead_bug", chance:0.1 },
+        "stink_bug": { elem2:["dead_bug","stench"], chance:0.035 },
+        "bee": { elem2:"dead_bug", chance:0.02 },
+        "bleach": { elem1:null, chance:0.1 },
+        "vinegar": { elem1:null, chance:0.05 },
+        "juice": { elem1:null, chance:0.03 },
+        "soap": { elem1:null, chance:0.2 },
+        "rock": { elem1:null, chance:0.2 },
+        "basalt": { elem1:null, chance:0.2 },
+    },
+    tempHigh: 220,
+    stateHigh: "smoke",
+    burn: 15,
+    burnTime: 30,
+    burnInto: ["smoke","smoke","smoke","smoke","ash"],
+    category: "life",
+    state: "solid",
+    breakInto: [null,null,"dust"],
+    hidden: true
 },
 "fly": {
     color: "#4c4e42",
@@ -2769,6 +2997,7 @@
         "cooked_meat": { elem2:null, chance:0.15, func:behaviors.FEEDPIXEL },
         "rotten_meat": { elem2:[null,null,"ammonia"], chance:0.15, func:behaviors.FEEDPIXEL },
         "cheese": { elem2:[null,null,"ammonia"], chance:0.15, func:behaviors.FEEDPIXEL },
+        "cheese_powder": { elem2:[null,null,"ammonia"], chance:0.15, func:behaviors.FEEDPIXEL },
         "rotten_cheese": { elem2:[null,null,"ammonia"], chance:0.15, func:behaviors.FEEDPIXEL },
         "vine": { elem2:null, chance:0.15, func:behaviors.FEEDPIXEL },
         "corn": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
@@ -2796,21 +3025,23 @@
     conduct: 1
 },
 "firefly": {
-    color: ["#684841","#684841","#d9d950","#684841","#684841"],
-    onPlace: function(pixel) {
-        pixel.color = pixelColorPick(pixel,"#684841")
-    },
+    color: "#684841",
+    buttonColor: ["#684841","#684841","#d9d950","#684841","#684841"],
+    // onPlace: function(pixel) {
+    //     pixel.color = pixelColorPick(pixel,"#684841")
+    // },
     tick: function(pixel) {
         if (!pixel.fff) { // firefly flicker
             // choose a number between 20 and 80
             pixel.fff = Math.floor(Math.random() * 60) + 20;
         }
-        if (pixelTicks % pixel.fff === 0) {
+        if (pixelTicks % pixel.fff === 0 && !pixel.glow) {
+            pixel.ffc = pixel.color;
             pixel.color = pixelColorPick(pixel,"#d9d950");
             pixel.glow = true;
         }
         else if (pixelTicks % pixel.fff === 2) {
-            pixel.color = pixelColorPick(pixel,"#684841");
+            pixel.color = pixel.ffc||pixelColorPick(pixel,"#684841");
             pixel.glow = false;
         }
         behaviors.FLY(pixel,function(firefly,newfly){
@@ -2832,6 +3063,72 @@
     tempLow: 0,
     stateLow: "dead_bug",
     breakInto: "dead_bug",
+    category:"life",
+    burn:95,
+    burnTime:25,
+    state: "solid",
+    density: 600,
+    conduct: 0.15
+},
+"bee": {
+    color: "#c4b100",
+    tick: function(pixel) {
+        if (pixelTicks-pixel.lastP > 150 && pixel.pollen && Math.random() < 0.0005 && isEmpty(pixel.x,pixel.y+1)) {
+            createPixel("pollen",pixel.x,pixel.y+1);
+            pixelMap[pixel.x][pixel.y+1].seed = pixel.pollen;
+            pixel.pollen = undefined;
+        }
+        behaviors.FLY(pixel,function(bee,hitPixel){
+            if (hitPixel) {
+                if (elements[hitPixel.element].seed === true) {
+                    bee.pollen = hitPixel.element;
+                    bee.lastP = pixelTicks
+                }
+                else if (elements[hitPixel.element].seed) {
+                    bee.pollen = elements[hitPixel.element].seed;
+                    bee.lastP = pixelTicks
+                }
+                if (hitPixel.lastP && (bee.lastP === undefined || bee.lastP < hitPixel.lastP)) {
+                    bee.lastP = hitPixel.lastP
+                }
+                // BEE HIVE
+                if (bee.hive === undefined) {
+                    if (hitPixel.hive !== undefined) { bee.hive = hitPixel.hive }
+                    else if (Math.random() < 0.01 && eLists.HIVEPLACE.indexOf(hitPixel.element) !== -1) {
+                        bee.queen = true;
+                        bee.mats = Math.floor(Math.random() * 9) + 4; //from 3 to 10
+                        bee.hive = Math.floor(Math.random() * 256);
+                        deletePixel(bee.x,bee.y);
+                        createPixel("hive",bee.x,bee.y);
+                        pixelMap[bee.x][bee.y].hive = bee.hive;
+                        pixelMap[bee.x][bee.y].bees.push(bee);
+                        return;
+                    }
+                }
+                else if (hitPixel.element === "hive" && hitPixel.bees.length < 5 && Math.random() < 0.25) {
+                    deletePixel(bee.x,bee.y);
+                    hitPixel.bees.push(bee);
+                    return;
+                }
+            }
+        })
+    },
+    reactions: {
+        "sugar_water": { elem2:null, chance:0.25, func:behaviors.FEEDPIXEL },
+        "soda": { elem2:null, chance:0.25, func:behaviors.FEEDPIXEL },
+        "sugar": { elem2:null, chance:0.15, func:behaviors.FEEDPIXEL },
+        "honey": { elem2:null, chance:0.15, func:behaviors.FEEDPIXEL },
+        "yeast": { elem2:null, chance:0.15, func:behaviors.FEEDPIXEL },
+        "caramel": { elem2:null, chance:0.25, func:behaviors.FEEDPIXEL },
+        "candy": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
+        "oil": { elem1:"dead_bug", chance:0.2 },
+    },
+    egg: "honey",
+    tempHigh: 100,
+    stateHigh: "ash",
+    tempLow: 0,
+    stateLow: "dead_bug",
+    breakInto: ["dead_bug","honey"],
     category:"life",
     burn:95,
     burnTime:25,
@@ -2922,72 +3219,6 @@
     hidden: true,
     movable: false
 },
-"bee": {
-    color: "#c4b100",
-    tick: function(pixel) {
-        if (pixelTicks-pixel.lastP > 150 && pixel.pollen && Math.random() < 0.0005 && isEmpty(pixel.x,pixel.y+1)) {
-            createPixel("pollen",pixel.x,pixel.y+1);
-            pixelMap[pixel.x][pixel.y+1].seed = pixel.pollen;
-            pixel.pollen = undefined;
-        }
-        behaviors.FLY(pixel,function(bee,hitPixel){
-            if (hitPixel) {
-                if (elements[hitPixel.element].seed === true) {
-                    bee.pollen = hitPixel.element;
-                    bee.lastP = pixelTicks
-                }
-                else if (elements[hitPixel.element].seed) {
-                    bee.pollen = elements[hitPixel.element].seed;
-                    bee.lastP = pixelTicks
-                }
-                if (hitPixel.lastP && (bee.lastP === undefined || bee.lastP < hitPixel.lastP)) {
-                    bee.lastP = hitPixel.lastP
-                }
-                // BEE HIVE
-                if (bee.hive === undefined) {
-                    if (hitPixel.hive !== undefined) { bee.hive = hitPixel.hive }
-                    else if (Math.random() < 0.01 && eLists.HIVEPLACE.indexOf(hitPixel.element) !== -1) {
-                        bee.queen = true;
-                        bee.mats = Math.floor(Math.random() * 9) + 4; //from 3 to 10
-                        bee.hive = Math.floor(Math.random() * 256);
-                        deletePixel(bee.x,bee.y);
-                        createPixel("hive",bee.x,bee.y);
-                        pixelMap[bee.x][bee.y].hive = bee.hive;
-                        pixelMap[bee.x][bee.y].bees.push(bee);
-                        return;
-                    }
-                }
-                else if (hitPixel.element === "hive" && hitPixel.bees.length < 5 && Math.random() < 0.25) {
-                    deletePixel(bee.x,bee.y);
-                    hitPixel.bees.push(bee);
-                    return;
-                }
-            }
-        })
-    },
-    reactions: {
-        "sugar_water": { elem2:null, chance:0.25, func:behaviors.FEEDPIXEL },
-        "soda": { elem2:null, chance:0.25, func:behaviors.FEEDPIXEL },
-        "sugar": { elem2:null, chance:0.15, func:behaviors.FEEDPIXEL },
-        "honey": { elem2:null, chance:0.15, func:behaviors.FEEDPIXEL },
-        "yeast": { elem2:null, chance:0.15, func:behaviors.FEEDPIXEL },
-        "caramel": { elem2:null, chance:0.25, func:behaviors.FEEDPIXEL },
-        "candy": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
-        "oil": { elem1:"dead_bug", chance:0.2 },
-    },
-    egg: "honey",
-    tempHigh: 100,
-    stateHigh: "ash",
-    tempLow: 0,
-    stateLow: "dead_bug",
-    breakInto: ["dead_bug","honey"],
-    category:"life",
-    burn:95,
-    burnTime:25,
-    state: "solid",
-    density: 600,
-    conduct: 0.15
-},
 "stink_bug": {
     color: ["#56482d","#52472c","#635443"],
     properties: {
@@ -3049,7 +3280,20 @@
 },
 "dead_bug": {
     color: ["#38302a","#403732","#453a2e","#241d15","#242e23"],
-    behavior: behaviors.POWDER,
+    tick: function(pixel) {
+        var inWeb = false;
+        for (var i = 0; i < squareCoords.length; i++) {
+            var coord = squareCoords[i];
+            var x = pixel.x+coord[0];
+            var y = pixel.y+coord[1];
+            if (!isEmpty(x,y,true) && elements[pixelMap[x][y].element].id === elements.web.id) {
+                inWeb = true;
+                break;
+            }
+        }
+        if (inWeb) { doDefaults(pixel); }
+        else { behaviors.POWDER(pixel); }
+    },
     reactions: {
         "water": { elem2:"foam", attr2:{"clone":"water"}, color2:"#e3d8ca", chance:0.001 },
         "salt_water": { elem2:"foam", attr2:{"clone":"salt_water"}, color2:"#e3d8ca", chance:0.001 }
@@ -3076,17 +3320,36 @@
     onPlace: function(pixel) {
         if (isEmpty(pixel.x, pixel.y+1)) {
             createPixel("body", pixel.x, pixel.y+1);
-            pixel.element = "head";
+            var color = pixel.color;
+            changePixel(pixel,"head");
+            pixel.color = color;
         }
         else if (isEmpty(pixel.x, pixel.y-1)) {
             createPixel("head", pixel.x, pixel.y-1);
             pixelMap[pixel.x][pixel.y-1].color = pixel.color;
-            pixel.element = "body";
-            pixel.color = pixelColorPick(pixel)
+            changePixel(pixel,"body");
         }
         else {
             deletePixel(pixel.x, pixel.y);
         }
+    },
+    reactions: {
+        "fire": { attr1:{panic:5} },
+        "plasma": { attr1:{panic:5} },
+        "cold_fire": { attr1:{panic:5} },
+        "electric": { attr1:{panic:5} },
+        "blood": { attr1:{panic:1} },
+        "infection": { attr1:{panic:2} },
+        "cancer": { attr1:{panic:3} },
+        "plague": { attr1:{panic:5} },
+        "radiation": { attr1:{panic:5} },
+        "tnt": { attr1:{panic:5} },
+        "dynamite": { attr1:{panic:5} },
+        "c4": { attr1:{panic:5} },
+        "grenade": { attr1:{panic:5} },
+        "gunpowder": { attr1:{panic:5} },
+        "acid": { attr1:{panic:5} },
+        "acid_gas": { attr1:{panic:5} },
     },
     related: ["body","head"],
     cooldown: defaultCooldown,
@@ -3118,6 +3381,7 @@
         "egg": { elem2:"yolk", chance:0.5, oneway:true },
         "grape": { elem2:"juice", chance:0.5, color2:"#291824", oneway:true },
         "ant": { elem2:"dead_bug", chance:0.05, oneway:true },
+        "spider": { elem2:"dead_bug", oneway:true },
         "fly": { elem2:"dead_bug", oneway:true },
         "firefly": { elem2:"dead_bug", oneway:true },
         "bee": { elem2:"dead_bug", oneway:true },
@@ -3166,8 +3430,32 @@
             if (head.dead) { // If head is dead, kill body
                 pixel.dead = head.dead;
             }
+            else if (head.panic > 0) {
+                pixel.panic = head.panic;
+                delete head.panic;
+            }
         }
         else { var head = null }
+        if (head && Math.random() < 0.25) {
+            let y = Math.random() < 0.5 ? 0 : -1;
+            for (let x = 1; x < 10; x++) {
+                let x2 = pixel.x+(x*pixel.dir);
+                let y2 = pixel.y+y;
+                if (!isEmpty(x2,y2,true)) {
+                    let seenPixel = pixelMap[x2][y2];
+                    if (elements.human.reactions[seenPixel.element] && elements.human.reactions[seenPixel.element].attr1 && elements.human.reactions[seenPixel.element].attr1.panic) {
+                        pixel.panic += elements.human.reactions[seenPixel.element].attr1.panic;
+                        pixel.dir *= -1;
+                        break;
+                    }
+                    else if (seenPixel.dead || seenPixel.temp > 200) {
+                        pixel.panic += 5;
+                        pixel.dir *= -1;
+                        break;
+                    }
+                }
+            }
+        }
         if (pixel.burning) {
             pixel.panic += 0.1;
             if (head && pixelTicks-pixel.burnStart > 240) {
@@ -3176,6 +3464,8 @@
         }
         else if (pixel.panic > 0) {
             pixel.panic -= 0.1;
+            if (pixel.panic < 0) { pixel.panic = 0; }
+            else if (pixel.panic > 50) { pixel.panic = 50; }
         }
 
         if (isEmpty(pixel.x, pixel.y-1)) {
@@ -3194,6 +3484,7 @@
                 [1*pixel.dir,0],
                 [1*pixel.dir,-1],
             ];
+            let moved = false;
             // While movesToTry is not empty, tryMove(pixel, x, y) with a random move, then remove it. if tryMove returns true, break.
             while (movesToTry.length > 0) {
                 var move = movesToTry.splice(Math.floor(Math.random() * movesToTry.length), 1)[0];
@@ -3202,12 +3493,20 @@
                     var origy = pixel.y+move[1];
                     if (tryMove(pixel, pixel.x+move[0], pixel.y+move[1]) && pixel.x===origx && pixel.y===origy) {
                         movePixel(head, head.x+move[0], head.y+move[1]);
+                        moved = true;
                         break;
+                    }
+                }
+                else if (!isEmpty(pixel.x+move[0], pixel.y+move[1], true)) {
+                    var hitPixel = pixelMap[pixel.x+move[0]][pixel.y+move[1]];
+                    if (hitPixel.element === "body" || hitPixel.element === "head" && hitPixel.panic < pixel.panic) {
+                        // interact with other human
+                        hitPixel.panic = pixel.panic;
                     }
                 }
             }
             // 15% chance to change direction
-            if (Math.random() < 0.15) {
+            if (Math.random() < 0.15 || !moved) {
                 pixel.dir *= -1;
             }
             // homeostasis
@@ -3241,65 +3540,7 @@
         "fallout": { elem1:["ash","meat","rotten_meat","cooked_meat"], chance:0.03 },
         "plague": { elem1:"plague", chance:0.05 },
         "oxygen": { elem2:"carbon_dioxide", chance:0.5 },
-        "meat": { elem2:null, chance:0.1 },
-        "cooked_meat": { elem2:null, chance:0.1 },
-        "cured_meat": { elem2:null, chance:0.1 },
-        "sugar": { elem2:null, chance:0.1 },
-        "broth": { elem2:null, chance:0.2 },
-        "yolk": { elem2:null, chance:0.1 },
-        "hard_yolk": { elem2:null, chance:0.1 },
-        "dough": { elem2:null, chance:0.1 },
-        "batter": { elem2:null, chance:0.2 },
-        "butter": { elem2:null, chance:0.1 },
-        "melted_butter": { elem2:null, chance:0.2 },
-        "chocolate": { elem2:null, chance:0.2 },
-        "melted_chocolate": { elem2:null, chance:0.3 },
-        "grape": { elem2:null, chance:0.1 },
-        "tomato": { elem2:null, chance:0.1 },
-        "herb": { elem2:null, chance:0.1 },
-        "lettuce": { elem2:null, chance:0.1 },
-        "corn": { elem2:null, chance:0.1 },
-        "popcorn": { elem2:null, chance:0.15 },
-        "potato": { elem2:null, chance:0.1 },
-        "baked_potato": { elem2:null, chance:0.15 },
-        "bread": { elem2:null, chance:0.1 },
-        "toast": { elem2:null, chance:0.1 },
-        "gingerbread": { elem2:null, chance:0.1 },
-        "baked_batter": { elem2:null, chance:0.2 },
-        "wheat": { elem2:null, chance:0.1 },
-        "candy": { elem2:null, chance:0.1 },
-        "yogurt": { elem2:null, chance:0.2 },
-        "frozen_yogurt": { elem2:null, chance:0.1 },
-        "ice_cream": { elem2:null, chance:0.2 },
         "beans": { elem2:[null,null,null,null,null,null,null,null,"stench"], chance:0.2 },
-        "tea": { elem2:null, chance:0.2 },
-        "coffee": { elem2:null, chance:0.2 },
-        "milk": { elem2:null, chance:0.2 },
-        "cream": { elem2:null, chance:0.2 },
-        "soda": { elem2:null, chance:0.2 },
-        "chocolate_milk": { elem2:null, chance:0.2 },
-        "fruit_milk": { elem2:null, chance:0.2 },
-        "pilk": { elem2:null, chance:0.2 },
-        "eggnog": { elem2:null, chance:0.2 },
-        "juice": { elem2:null, chance:0.2 },
-        "cheese": { elem2:null, chance:0.1 },
-        "melted_cheese": { elem2:null, chance:0.2 },
-        "alcohol": { elem2:null, chance:0.2 },
-        "antidote": { elem2:null, chance:0.2 },
-        "honey": { elem2:null, chance:0.2 },
-        "caramel": { elem2:null, chance:0.2 },
-        "molasses": { elem2:null, chance:0.05 },
-        "ketchup": { elem2:null, chance:0.1 },
-        "pumpkin_seed": { elem2:null, chance:0.1 },
-        "nut": { elem2:null, chance:0.1 },
-        "nut_meat": { elem2:null, chance:0.1 },
-        "nut_butter": { elem2:null, chance:0.1 },
-        "nut_milk": { elem2:null, chance:0.2 },
-        "jelly": { elem2:null, chance:0.2 },
-        "mayo": { elem2:null, chance:0.2 },
-        "mashed_potato": { elem2:null, chance:0.2 },
-        "sauce": { elem2:null, chance:0.2 },
-        "pickle": { elem2:null, chance:0.1 },
         "sun": { elem1:"cooked_meat" },
         "light": { stain1:"#825043" },
         "bee": { stain1:"#cc564b", chance:0.2 },
@@ -3331,6 +3572,19 @@
         }
         else { var body = null }
 
+        // check for eating food
+        if (body && !pixel.dead && Math.random() < 0.1) {
+            shuffleArray(interactCoordsShuffle);
+            for (var i = 0; i < interactCoordsShuffle.length; i++) {
+                var x = pixel.x+interactCoordsShuffle[i][0];
+                var y = pixel.y+interactCoordsShuffle[i][1];
+                if (!isEmpty(x,y,true) && elements[pixelMap[x][y].element].isFood && pixelMap[x][y].panic === undefined) {
+                    deletePixel(x,y);
+                    break;
+                }
+            }
+        }
+
         if (tryMove(pixel, pixel.x, pixel.y+1)) {
             // create blood if severed 10% chance
             if (isEmpty(pixel.x, pixel.y+1) && !pixel.dead && Math.random() < 0.1 && !pixel.charge) {
@@ -3344,6 +3598,26 @@
         // homeostasis
         if (pixel.temp > 37) { pixel.temp -= 1; }
         else if (pixel.temp < 37) { pixel.temp += 1; }
+    },
+    onChange: function(pixel) {
+        for (var i = 0; i < adjacentCoords.length; i++) {
+            var coord = adjacentCoords[i];
+            var x = pixel.x+coord[0];
+            var y = pixel.y+coord[1];
+            if (!isEmpty(x,y,true) && pixelMap[x][y].panic !== undefined) {
+                pixelMap[x][y].panic += 20;
+            }
+        }
+    },
+    onDelete: function(pixel) {
+        for (var i = 0; i < adjacentCoords.length; i++) {
+            var coord = adjacentCoords[i];
+            var x = pixel.x+coord[0];
+            var y = pixel.y+coord[1];
+            if (!isEmpty(x,y,true) && pixelMap[x][y].panic !== undefined) {
+                pixelMap[x][y].panic += 20;
+            }
+        }
     }
 },
 "bird": {
@@ -3434,6 +3708,8 @@
         "nut_meat": { elem2:null, chance:0.25, func:behaviors.FEEDPIXEL },
         "nut_butter": { elem2:null, chance:0.25, func:behaviors.FEEDPIXEL },
         "jelly": { elem2:null, chance:0.25, func:behaviors.FEEDPIXEL },
+        "spider": { elem2:null, chance:0.1, func:behaviors.FEEDPIXEL },
+        "web": { elem2:null, chance:0.1, func:behaviors.FEEDPIXEL },
         "plague": { elem1:"plague", chance:0.05 },
         "oxygen": { elem2:"carbon_dioxide", chance:0.5 }
     },
@@ -3465,11 +3741,13 @@
         "cooked_meat": { elem2:null, chance:0.1, func:behaviors.FEEDPIXEL },
         "cured_meat": { elem2:null, chance:0.1, func:behaviors.FEEDPIXEL },
         "cheese": { elem2:null, chance:0.2, func:behaviors.FEEDPIXEL },
+        "cheese_powder": { elem2:null, chance:0.2, func:behaviors.FEEDPIXEL },
         "rotten_cheese": { elem2:null, chance:0.2, func:behaviors.FEEDPIXEL },
         "melted_cheese": { elem2:null, chance:0.3, func:behaviors.FEEDPIXEL },
         "tomato": { elem2:null, chance:0.1, func:behaviors.FEEDPIXEL },
         "sauce": { elem2:null, chance:0.3, func:behaviors.FEEDPIXEL },
         "plant": { elem2:null, chance:0.1, func:behaviors.FEEDPIXEL },
+        "vine": { elem2:null, chance:0.1, func:behaviors.FEEDPIXEL },
         "evergreen": { elem2:null, chance:0.1, func:behaviors.FEEDPIXEL },
         "algae": { elem2:null, chance:0.2, func:behaviors.FEEDPIXEL },
         "grass_seed": { elem2:null, chance:0.3 , func:behaviors.FEEDPIXEL},
@@ -3551,10 +3829,11 @@
     reactions: {
         "fly": { elem2:null, chance:0.5, func:behaviors.FEEDPIXEL },
         "firefly": { elem1:"meat", elem2:null, chance:0.5 },
-        "stinkbug": { elem2:null, chance:0.55, func:behaviors.FEEDPIXEL },
+        "stink_bug": { elem2:null, chance:0.55, func:behaviors.FEEDPIXEL },
         "snail": { elem2:"limestone", chance:0.05, func:behaviors.FEEDPIXEL },
         "slug": { elem2:null, chance:0.2, func:behaviors.FEEDPIXEL },
         "worm": { elem2:null, chance:0.2, func:behaviors.FEEDPIXEL },
+        "spider": { elem2:null, chance:0.2, func:behaviors.FEEDPIXEL },
         "algae": { elem2:null, chance:0.5, func:behaviors.FEEDPIXEL },
         "kelp": { elem2:"water", chance:0.5, func:behaviors.FEEDPIXEL },
         "oxygen": { elem2:"carbon_dioxide", chance:0.5 },
@@ -3576,6 +3855,9 @@
     tempHigh: 100,
     stateHigh: "cooked_meat",
     stateHighColor: "#CDAF96",
+    onStateHigh: function(pixel) {
+        releaseElement(pixel,"steam");
+    },
     tempLow: -18,
     stateLow: "frozen_frog",
     category:"life",
@@ -3640,6 +3922,7 @@
         "firefly": { elem2:null, chance:0.6, func:behaviors.FEEDPIXEL },
         "worm": { elem2:null, chance:0.25, func:behaviors.FEEDPIXEL },
         "tadpole": { elem2:null, chance:0.25, func:behaviors.FEEDPIXEL },
+        "spider": { elem2:null, chance:0.25, func:behaviors.FEEDPIXEL },
         "oxygen": { elem2:"carbon_dioxide", chance:0.5 },
         "dead_bug": { elem2:null, chance:0.2, func:behaviors.FEEDPIXEL },
         "broth": { elem2:"water", chance:0.2, func:behaviors.FEEDPIXEL },
@@ -3703,6 +3986,7 @@
         "coffee_bean": { elem1: null, chance:0.05 },
         "coffee_ground": { elem1: null, chance:0.05 },
         "coffee": { elem1: null, chance:0.05 },
+        "soap": { elem1: null, chance:0.05 },
         "plant": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
         "evergreen": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
         "cactus": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
@@ -3751,6 +4035,7 @@
         "coffee_bean": { elem1: "limestone", chance:0.05 },
         "coffee_ground": { elem1: "limestone", chance:0.05 },
         "coffee": { elem1: "limestone", chance:0.05 },
+        "soap": { elem1: "limestone", chance:0.05 },
         "plant": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
         "evergreen": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
         "cactus": { elem2:null, chance:0.05, func:behaviors.FEEDPIXEL },
@@ -4108,6 +4393,8 @@
     tempHigh: 250,
     stateHigh: "molten_plastic",
     category: "special",
+    state: "solid",
+    density: 1052,
     flipY: false,
     flippableY: true,
     hidden: true
@@ -4138,7 +4425,7 @@
     burnInto: "pop",
     state: "solid",
     density: 0.164,
-    breakInto: ["confetti","helium","helium","helium"]
+    breakInto: ["confetti","helium","helium","helium","pop"]
 },
 "antipowder": {
     color: "#ebd1d8",
@@ -4478,7 +4765,8 @@
     density: 208,
     breakInto: ["ash","ash","carbon_dioxide"],
     hardness: 0.5,
-    conduct: 0.001
+    conduct: 0.001,
+    stain: 0.02
 },
 "tinder": {
     color: ["#917256","#87684f","#735f4a","#5d4c3e","#4b3a2e"],
@@ -4519,9 +4807,10 @@
                 if (!isEmpty(pixel.x, pixel.y+1,true)) {
                     var newPixel = pixelMap[pixel.x][pixel.y+1];
                     if (newPixel.element === "hail") { break; }
-                    if (elements[newPixel.element].state == "solid") {
+                    if (elements[newPixel.element].state == "solid" || !elements[newPixel.element].state) {
                         if (Math.random() > (elements[newPixel.element].hardness || 0)) {
                             if (elements[newPixel.element].breakInto) {
+                                console.log(JSON.stringify(newPixel))
                                 breakPixel(newPixel);
                             }
                             else {
@@ -4529,7 +4818,8 @@
                             }}}}
                 deletePixel(pixel.x,pixel.y);
                 break;
-            }}},
+            }}
+        doHeat(pixel)},
     temp: -20,
     tempHigh: 10,
     stateHigh: "water",
@@ -4543,7 +4833,7 @@
     color: "#558bcf",
     behavior: behaviors.GAS,
     reactions: {
-        "oxygen": { elem1:null, elem2:"steam", tempMin:500 },
+        "oxygen": { elem1:null, elem2:"steam", tempMin:500, tempMax:3000 },
         "hydrogen": { elem1:"neutron", elem2:"helium", tempMin:10000, temp1:20000, temp2:20000 },
         "nitrogen": { elem1:null, elem2:"oxygen", tempMin:10000 },
         "sulfur": { elem1:null, elem2:"chlorine", tempMin:10000 },
@@ -4686,6 +4976,7 @@
         "plant": { elem1:"plant", chance:0.05 },
         "evergreen": { elem1:"evergreen", chance:0.05 },
         "cactus": { elem1:"cactus", chance:0.05 },
+        "wheat": { elem1:"wheat", chance:0.05 },
         "wheat_seed": { elem1:"wheat", chance:0.05 },
         "grass": { elem1:"grass", chance:0.05 },
         "grass_seed": { elem1:"grass", chance:0.05 },
@@ -4735,6 +5026,13 @@
         "sand": { elem1:null, elem2:"wet_sand" },
         "sulfur": { elem1:null, elem2:"greek_fire" },
         "molten_sulfur": { elem1:"greek_fire", elem2:"greek_fire" },
+        "water": { burning1:true, elem2:"explosion" },
+        "steam": { burning1:true, elem2:"explosion" },
+        "salt_water": { burning1:true, elem2:"explosion" },
+        "sugar_water": { burning1:true, elem2:"explosion" },
+        "dirty_water": { burning1:true, elem2:"explosion" },
+        "pool_water": { burning1:true, elem2:"explosion" },
+        "seltzer": { burning1:true, elem2:"explosion" },
     },
     category: "liquids",
     tempHigh: 500,
@@ -4760,7 +5058,7 @@
     reactions: {
         "glue": {elem2:null, chance:0.05},
         "wax": {elem2:null, chance:0.005},
-        "melted_wax": {elem2:null, chance:0.025},
+        "melted_wax": {elem2:null, chance:0.025}
     },
     category: "liquids",
     tempHigh: 2100,
@@ -4826,6 +5124,7 @@
     color: ["#6b2e2e","#6b4f2e","#6b6b2e","#2e6b2e","#2e6b6b","#2e2e6b","#6b2e6b"],
     behavior: behaviors.WALL,
     onPlace: behaviors.DO_TICK,
+    renderer: renderPresets.BORDER,
     tick: function(pixel) {
         if (pixel.start-1 <= pixelTicks) {
             if (pixel.colorstart === undefined) {
@@ -4841,6 +5140,7 @@
     breakInto: "color_sand",
     noMix: true,
     movable: false,
+    grain: 0
 },
 "molten_stained_glass": {
     color: ["#c27070","#c29c70","#c2c270","#70c270","#70c2c2","#7070c2","#c270c2"],
@@ -4914,9 +5214,12 @@
 "border": {
     color: ["#00ffff","#000000","#00ffff","#000000","#00ffff"],
     tick: function(pixel) {
+        if (pixel.start === pixelTicks) {
+            pixel.color = pixelColorPick(pixel,"#00ffff");
+        }
         var t = pixelTicks/2+pixel.x+pixel.y;
         var r = Math.floor(127*Math.sin(t/1.5));
-        pixel.color = "rgba("+r+","+r*2+","+r*2+","+r/127+")";
+        pixel.alpha = Math.max(0,r/127);
     },
     onPlace: behaviors.DO_TICK,
     category: "special",
@@ -4930,6 +5233,7 @@
     reactions: {
         "dirt": { elem1:"clay_soil", elem2:"clay_soil" },
         "gravel": { elem1:"clay_soil", elem2:"clay_soil" },
+        "quicklime": { elem1:"cement", elem2:"cement" },
     },
     tempHigh: 135,
     stateHigh: "baked_clay",
@@ -4981,7 +5285,9 @@
     color: "#cb4141",
     colorPattern: textures.BRICK,
     colorKey: {
+        "l": "#e05555",
         "r": "#cb4141",
+        "d": "#a62e2e",
         "w": "#bababa"},
     behavior: behaviors.WALL,
     category: "solids",
@@ -4993,6 +5299,12 @@
 },
 "ruins": {
     color: "#5c5c5c",
+    colorPattern: textures.BRICK,
+    colorKey: {
+        "l": "#5c5c5c",
+        "r": "#474747",
+        "d": "#383838",
+        "w": "#212121"},
     behavior: [
         "XX|SP|XX",
         "XX|XX|XX",
@@ -5159,6 +5471,7 @@
 "cactus": {
     color: ["#78a33e","#84b543","#cce37b","#84b543","#78a33e"],
     tick: function(pixel) {
+        behaviors.SEEDRISE(pixel);
         if (!pixel.stage) {
             if (!tryMove(pixel,pixel.x,pixel.y+1)) {
                 if (Math.random() < 0.02 && isEmpty(pixel.x,pixel.y-1)) {
@@ -5318,6 +5631,7 @@
         "XX|L2:grass|XX",
         "XX|M1|XX",
     ],
+    tick: behaviors.SEEDRISE,
     tempHigh: 100,
     stateHigh: "dead_plant",
     tempLow: -2,
@@ -5339,6 +5653,7 @@
         "XX|L2:wheat AND C2:wheat%30|XX",
         "XX|M1|XX",
     ],
+    tick: behaviors.SEEDRISE,
     tempHigh: 400,
     stateHigh: "fire",
     tempLow: -2,
@@ -5434,6 +5749,7 @@
         "XX|L2:plant AND C2:pistil%30|XX",
         "XX|M1|XX",
     ],
+    tick: behaviors.SEEDRISE,
     tempHigh: 100,
     stateHigh: "dead_plant",
     tempLow: -2,
@@ -5469,6 +5785,9 @@
             }
         }
         doDefaults(pixel)
+    },
+    reactions: {
+        "alcohol": { elem1:null, chance:0.1 }
     },
     tempHigh: 100,
     stateHigh: "dead_plant",
@@ -5657,6 +5976,7 @@
         "XX|L2:bamboo AND C2:bamboo%10|XX",
         "XX|M1|XX",
     ],
+    tick: behaviors.SEEDRISE,
     tempHigh: 100,
     stateHigh: "dead_plant",
     tempLow: -2,
@@ -5707,7 +6027,7 @@
         "DB%5 AND M2|XX|DB%5 AND M2",
         "DB%5 AND M2|DB%10 AND M1|DB%5 AND M2",
     ],
-    ignore: ["glass","rad_glass","glass_shard","rad_shard","stained_glass","baked_clay","acid_gas","neutral_acid","acid_cloud","water","salt_water","sugar_water","dirty_water","copper","gold","porcelain","plastic","bead","microplastic","molten_plastic","pool_water","chlorine","hydrogen","gold_coin","silver","nickel","calcium","bone","earthquake","tornado","tsunami","liquid_light","sensor"],
+    ignore: ["glass","rad_glass","glass_shard","rad_shard","stained_glass","baked_clay","acid_gas","neutral_acid","acid_cloud","water","salt_water","sugar_water","dirty_water","copper","gold","porcelain","plastic","bead","microplastic","molten_plastic","pool_water","chlorine","hydrogen","gold_coin","silver","nickel","calcium","bone","earthquake","tornado","tsunami","liquid_light","sensor","clay"],
     reactions: {
         "ash": { elem1:"neutral_acid", elem2:null },
         "limestone": { elem1:"neutral_acid", elem2:["calcium","carbon_dioxide"] },
@@ -5730,6 +6050,9 @@
         "calcium": { elem1:"chlorine", elem2:"hydrogen", chance:0.01 },
         "zinc": { elem1:"hydrogen", elem2:null, chance:0.03 },
         "sugar": { elem1:"steam", elem2:"carbon_dioxide" },
+        "gravel": { elem1:null, elem2:"sand", chance:0.1 },
+        "wet_sand": { elem1:"neutral_acid", elem2:"clay" },
+        "snail": { elem1:"neutral_acid", elem2:"slug" },
     },
     category: "liquids",
     tempHigh: 110,
@@ -5804,6 +6127,11 @@
         "gold_coin": {elem1:null, elem2:"gold"},
         "cellulose": {elem1:null, elem2:"paper"},
         "feather": {elem1:null, elem2:"cloth"},
+        "rock": {elem1:null, elem2:"rock_wall"},
+        "brick_rubble": {elem1:null, elem2:"brick"},
+        "bead": {elem1:null, elem2:"plastic"},
+        "dirt": {elem1:null, elem2:"mudstone"},
+        "sand": {elem1:null, elem2:"packed_sand"},
         "fly": {elem2:"dead_bug"},
         "firefly": {elem2:"dead_bug"},
         "ant": {elem2:"dead_bug"},
@@ -6144,7 +6472,7 @@
     tempHigh: 1000,
     stateHigh: ["smoke","steam","alcohol_gas","smoke","steam","alcohol_gas","smoke","steam","alcohol_gas","quicklime","salt"],
     category: "states",
-    viscosity: 112,
+    viscosity: 30000,
     hidden: true,
     state: "liquid",
     density: 400,
@@ -6157,6 +6485,7 @@
         "XX|L2:mushroom_stalk AND C2:mushroom_gill%20|XX",
         "XX|M1|XX",
     ],
+    tick: behaviors.SEEDRISE,
     reactions: {
         "wood": { elem2:"dirt", chance:0.04 },
         "tree_brake": { elem2:"dirt", chance:0.04 },
@@ -6172,7 +6501,6 @@
     stateHigh: "fire",
     burn: 10,
     burnTime: 20,
-    breakInto: [null,null,"dust"],
     state: "solid",
     density: 123.6,
     cooldown: defaultCooldown,
@@ -6435,6 +6763,8 @@
     burn: 10,
     burnTime: 200,
     burnInto: ["dioxin","smoke","dioxin","smoke","stench"],
+    breakInto: "bead",
+    breakIntoColor: ["#d3e8e8","#afc9c9"],
     category: "solids",
     state: "solid",
     density: 1052
@@ -6594,7 +6924,10 @@
     onDelete: behaviors.RELEASE_MOISTURE,
     reactions: {
         "water":{}, "salt_water":{}, "sugar_water":{}, "dirty_water":{}, "pool_water":{}, "seltzer":{},
-        "soap": { elem2:"bubble" }
+        "soap": { elem2:"bubble" },
+        "mud": { elem2:"dirt" },
+        "wet_sand": { elem2:"sand" },
+        "clay": { elem2:"clay_soil" },
     },
     renderer: function(pixel,ctx) {
         drawDefault(ctx,pixel);
@@ -6692,6 +7025,7 @@
         "BLBB",
         "LBBB"
     ],
+    grain: 0.5,
     behavior: behaviors.WALL,
     reactions: {
         "water": { elem1:"rust", chance:0.002 },
@@ -6727,6 +7061,7 @@
         "BLBL",
         "LBBB"
     ],
+    grain: 0.5,
     behavior: behaviors.WALL,
     tempHigh: 1200,
     category: "solids",
@@ -7087,7 +7422,7 @@
     reactions: {
         "melted_chocolate": { elem1:"chocolate_milk", elem2:null },
         "chocolate": { elem1:"chocolate_milk", elem2:"melted_chocolate", chance:0.05 },
-        "coffee_ground": { elem1:"chocolate_milk", chance:0.05 },
+        "chocolate_powder": { elem1:"chocolate_milk", elem2:"melted_chocolate", chance:0.2 },
         "juice": { elem1:"fruit_milk", elem2:null, chance:0.05 },
         "soda": { elem1:"pilk", elem2:null, chance:0.1 },
         "yolk": { elem1:"eggnog", elem2:null, chance:0.1 },
@@ -7100,7 +7435,7 @@
     stateLow: "ice_cream",
     stateLowColorMultiplier: [0.97,0.93,0.87],
     tempHigh: 100,
-    stateHigh: ["smoke","smoke","smoke","quicklime"],
+    stateHigh: ["steam","bubble","cream","cream","sugar"],
     viscosity: 1.5,
     category: "liquids",
     state: "liquid",
@@ -7251,6 +7586,7 @@
     reactions: {
         "melted_chocolate": { color1:"#664934", elem2:null },
         "chocolate": { color1:"#664934", elem2:"melted_chocolate", chance:0.05 },
+        "chocolate_powder": { color1:"#664934", elem2:"melted_chocolate", chance:0.1 },
         "juice": { elem1:"fruit_milk", elem2:null, chance:0.05 },
         "soda": { elem1:"pilk", elem2:null, chance:0.1 },
         "yolk": { elem1:"eggnog", elem2:null, chance:0.1 },
@@ -7258,8 +7594,8 @@
         "sugar": { elem2:null, chance:0.005},
     },
     viscosity: 1.5,
-    tempHigh: 1000,
-    stateHigh: ["smoke","smoke","smoke","steam","steam","calcium"],
+    tempHigh: 200,
+    stateHigh: ["steam","bubble","sugar"],
     tempLow: 0,
     stateLow: "ice_cream",
     stateLowColorMultiplier: 0.97,
@@ -7433,6 +7769,7 @@
     },
     tempHigh: 54,
     stateHigh: "melted_cheese",
+    breakInto: "cheese_powder",
     category: "food",
     state: "solid",
     density: 477.62,
@@ -7441,12 +7778,23 @@
 "rotten_cheese": {
     color: ["#ffcc40","#c1b338","#839930"],
     behavior: [
-        "XX|CR:plague,stench,stench,stench,fly%0.25 AND CH:cheese>rotten_cheese%1|XX",
-        "CH:cheese>rotten_cheese%1|XX|CH:cheese>rotten_cheese%1",
-        "XX|M1 AND CH:cheese>rotten_cheese%1|XX",
+        "XX|CR:plague,stench,stench,stench,fly%0.25 AND CH:cheese,cheese_powder>rotten_cheese%1|XX",
+        "CH:cheese,cheese_powder>rotten_cheese%1|XX|CH:cheese,cheese_powder>rotten_cheese%1",
+        "XX|M1 AND CH:cheese,cheese_powder>rotten_cheese%1|XX",
     ],
     tempHigh: 54,
     stateHigh: ["melted_cheese","melted_cheese","melted_cheese","melted_cheese","melted_cheese","melted_cheese","melted_cheese","melted_cheese","melted_cheese","stench"],
+    category: "food",
+    state: "solid",
+    density: 470,
+    isFood: true,
+    hidden: true
+},
+"cheese_powder": {
+    color: ["#ffcc40","#fcba03","#d99f00"],
+    behavior: behaviors.POWDER,
+    tempHigh: 54,
+    stateHigh: "melted_cheese",
     category: "food",
     state: "solid",
     density: 470,
@@ -7461,7 +7809,19 @@
     category: "food",
     state: "solid",
     density: 1325,
-    isFood: true
+    isFood: true,
+    breakInto: "chocolate_powder"
+},
+"chocolate_powder": {
+    color: ["#4d2818","#3b1b0d","#33160a"],
+    behavior: behaviors.POWDER,
+    tempHigh: 31,
+    stateHigh: "melted_chocolate",
+    category: "food",
+    state: "solid",
+    density: 1325,
+    isFood: true,
+    hidden: true
 },
 "grape": {
     color: ["#b84b65","#a10e69","#a10e95","#8a3eab"],
@@ -7514,6 +7874,7 @@
         "mushroom_gill": { elem2:null, chance:0.05 },
         "mushroom_cap": { elem2:null, chance:0.05 },
         "pollen": { elem2:null, chance:0.05 },
+        "caramel": { elem2:null, chance:0.01 },
         "salt": { elem1: null, elem2: "sodium_acetate", chance:0.05 },
         "lettuce": { elem2:"pickle", chance:0.01 },
         "egg": { elem2:"pickle", color2:"#e0e0ab", chance:0.01 },
@@ -7658,6 +8019,7 @@
 "pumpkin_seed": {
     color: ["#FFE9CA","#ffdcc2","#ffcaab"],
     tick: function(pixel) {
+        behaviors.SEEDRISE(pixel);
         if (!tryMove(pixel,pixel.x,pixel.y+1) && Math.random() < 0.01) {
             if (!pixel.stage) {
                 if (!isEmpty(pixel.x,pixel.y+1,true)) {
@@ -7705,24 +8067,20 @@
 },
 "corn": {
     color: ["#f8d223","#d6ba2a","#f7f5ba","#dbd281","#cdb12d"],
-    tick: function(pixel) {
-        if (pixel.temp >= 180) {
-            changePixel(pixel,"popcorn");
-            if (isEmpty(pixel.x,pixel.y-1)) {
-                tryMove(pixel,pixel.x,pixel.y-1);
-                if (isEmpty(pixel.x-1,pixel.y)) { createPixel("pop",pixel.x-1,pixel.y) }
-                if (isEmpty(pixel.x+1,pixel.y)) { createPixel("pop",pixel.x+1,pixel.y) }
-                if (isEmpty(pixel.x,pixel.y-1)) { createPixel("pop",pixel.x,pixel.y-1) }
-                if (isEmpty(pixel.x,pixel.y+1)) { createPixel("pop",pixel.x,pixel.y+1) }
-            }
-        }
-        doDefaults(pixel)
-    },
+    behavior: behaviors.WALL,
     category: "food",
     burn: 10,
     burnTime: 200,
     breakInto: "flour",
     breakIntoColor: ["#ffe9a8","#ffecb3","#ffe28a"],
+    tempHigh: 180,
+    stateHigh: "popcorn",
+    onStateHigh: function(pixel) {
+        tryMove(pixel,pixel.x,pixel.y-1);
+        tryMove(pixel,pixel.x,pixel.y-1);
+        tryMove(pixel,pixel.x,pixel.y-1);
+        releaseElement(pixel,"pop",4);
+    },
     state: "solid",
     density: 721,
     seed: "corn_seed",
@@ -7750,6 +8108,7 @@
         "XX|L2:plant,corn AND C2:corn%30|XX",
         "XX|M1|XX",
     ],
+    tick: behaviors.SEEDRISE,
     tempHigh: 400,
     stateHigh: "fire",
     tempLow: -2,
@@ -7900,6 +8259,7 @@
         "sugar_water": { elem2:"alcohol", chance:0.005, color2:"#80724d" },
         "soda": { elem2:"alcohol", chance:0.005, color2:"#80724d" },
         "corn": { elem2:"alcohol", chance:0.005, color2:"#b8b6a2" },
+        "rice": { elem2:"alcohol", chance:0.005, color2:"#ecc986" },
         "honey": { elem2:"alcohol", chance:0.005, color2:"#dccb72" },
         "molasses": { elem2:"alcohol", chance:0.005, color2:"#803924" },
         "herb": { elem2:"tea", chance:0.005 },
@@ -7930,7 +8290,7 @@
     tempHigh: 176,
     stateHigh: "toast",
     category: "food",
-    burn: 30,
+    burn: 5,
     burnTime: 200,
     burnInto: ["smoke","smoke","smoke","ash"],
     breakInto: "crumb",
@@ -7944,8 +8304,8 @@
     tempHigh: 550,
     stateHigh: "ash",
     category: "food",
-    burn: 50,
-    burnTime: 170,
+    burn: 10,
+    burnTime: 200,
     burnInto: ["smoke","smoke","smoke","ash"],
     breakInto: "crumb",
     breakIntoColor: ["#c8946a","#c08655","#ba7a45","#a86d3e"],
@@ -7959,7 +8319,7 @@
     tempHigh: 875,
     stateHigh: "ash",
     category: "food",
-    burn: 30,
+    burn: 5,
     burnTime: 200,
     burnInto: ["smoke","smoke","smoke","ash"],
     breakInto: "crumb",
@@ -7974,7 +8334,7 @@
     tempHigh: 550,
     stateHigh: "ash",
     category: "food",
-    burn: 15,
+    burn: 5,
     burnTime: 200,
     burnInto: ["smoke","smoke","smoke","ash"],
     state: "solid",
@@ -7988,7 +8348,7 @@
     tempHigh: 550,
     stateHigh: "ash",
     category: "food",
-    burn: 10,
+    burn: 5,
     burnTime: 400,
     burnInto: ["smoke","smoke","smoke","ash"],
     breakInto: "crumb",
@@ -8083,6 +8443,7 @@
         "salt_water": { elem1:"coffee", elem2:"coffee", tempMin:70 },
         "sugar_water": { elem1:"melted_chocolate", elem2:"melted_chocolate", tempMin:60 },
         "seltzer": { elem1:"coffee", elem2:"coffee", tempMin:70 },
+        "milk": { elem1:"coffee", tempMin:70 },
         "coffee": { elem1:"coffee", tempMin:70 },
         "melted_chocolate": { elem1:"melted_chocolate", tempMin:60 },
         "stench": { elem2:null },
@@ -8214,6 +8575,7 @@
         "honey": {elem1:"carbon_dioxide", chance:0.01},
         "molasses": {elem1:"carbon_dioxide", chance:0.01},
         "melted_chocolate": {elem1:"carbon_dioxide", chance:0.01},
+        "soap": {elem1:["carbon_dioxide","water"], elem2:"bubble", chance:0.01},
     },
     category: "food",
     state: "solid",
@@ -8355,6 +8717,7 @@
         "mushroom_stalk": { stain1:"#cc564b" },
         "chlorine": { stain1:"#cc564b" },
         "quicklime": { stain1:"#cc564b" },
+        "plague": { elem1:"plague", chance:0.01 }
     },
     category:"solids",
     breakInto: [null,null,null,"blood","dust"],
@@ -8375,10 +8738,16 @@
     color: ["#C6C3BF","#EEDFC0","#DAB575","#BF9F6C","#C67945","#9B6E47","#967454","#945F36","#4C3D2E","#5A3E2D","#1c1c1c","#4A2227","#6D342B","#9D4C3B","#C25E3B"],
     singleColor: true,
     behavior: behaviors.WALL,
+    tick: function(pixel) {
+        behaviors.ABSORB(pixel,1,0.01);
+    },
+    onBreak: behaviors.RELEASE_MOISTURE,
+    onDelete: behaviors.RELEASE_MOISTURE,
     reactions: {
         "oil": { elem2:"dust", color2:"#e0e0e0", chance:0.005 },
         "nut_oil": { elem2:"dust", color2:"#e0e0e0", chance:0.005 },
         "grease": { elem2:"dust", color2:"#e0e0e0", chance:0.005 },
+        "water":{}, "salt_water":{}, "sugar_water":{}, "dirty_water":{}, "pool_water":{}, "seltzer":{},
     },
     category:"solids",
     tempHigh: 223,
@@ -8410,7 +8779,8 @@
     density: 785.1,
     stain: -0.25,
     isFood: true,
-    darkText: true
+    darkText: true,
+    alias: "ethanol"
 },
 "alcohol_gas": {
     density: 1.627,
@@ -8501,6 +8871,7 @@
         "ink": { elem2: null, chance:0.02 },
         "dye": { elem2: null, chance:0.02 },
         "glue": { elem2: null, chance:0.02 },
+        "slime": { elem2: null, chance:0.005 },
         "stench": { elem2: null },
         "cancer": { elem2: null, chance:0.01 },
         "rat": { elem2: null, chance:0.01 },
@@ -8511,6 +8882,7 @@
         "worm": { elem2: "dead_bug", chance:0.1 },
         "flea": { elem2: "dead_bug", chance:0.1 },
         "termite": { elem2: "dead_bug", chance:0.1 },
+        "spider": { elem2: "dead_bug", chance:0.1 },
         "stink_bug": { elem2: "dead_bug", chance:0.1 },
         "smog": { elem2: "cloud" },
         "water": { elem1: ["foam","bubble"], chance:0.005 },
@@ -8543,6 +8915,8 @@
         "fish": { elem2: "rotten_meat", chance: 0.01 },
         "oil": { elem1:null, elem2: "chlorine", chance: 0.01 },
         "lamp_oil": { elem1:null, elem2: "chlorine", chance: 0.01 },
+        "nut_oil": { elem1:null, elem2: "chlorine", chance: 0.01 },
+        "grease": { elem1:null, elem2: "chlorine", chance: 0.01 },
         "blood": { elem2: null },
         "infection": { elem2: null },
         "vinegar": { elem1:"chlorine", elem2:"sodium_acetate" },
@@ -8555,6 +8929,8 @@
         "pollen": { elem2:null, chance:0.1 },
         "antidote": { elem2:null, chance:0.1 },
         "porcelain": { stain2:"#b3967f" },
+        "porcelain_shard": { stain2:"#b3967f" },
+        "salt": { elem2:"foam", chance:0.001 },
     },
     tempHigh: 111,
     stateHigh: ["salt","steam"],
@@ -8613,12 +8989,13 @@
     color: ["#ff0000","#ff8800","#ffff00","#00ff00","#00ffff","#0000ff","#ff00ff"],
     behavior: behaviors.LIQUID,
     reactions: {
-        "water": { elem1:null, chance:0.05 },
+        "water": { stain2:null },
         "salt_water": { elem1:null, chance:0.05 },
         "sugar_water": { elem1:null, chance:0.05 },
         "seltzer": { elem1:null, chance:0.05 },
         "dirty_water": { elem1:null, chance:0.05 },
-        "pool_water": { elem1:null, chance:0.05 }
+        "pool_water": { elem1:null, chance:0.05 },
+        "bleach": { elem1:null, elem2:null, chance:0.05 }
     },
     customColor: true,
     stain: 0.66,
@@ -8640,7 +9017,8 @@
         "seltzer": { elem1:null, chance:0.01 },
         "dirty_water": { elem1:null, chance:0.01 },
         "pool_water": { elem1:null, chance:0.01 },
-        "dye": { elem1:"dye", color1:"#171717" }
+        "dye": { elem1:"dye", color1:"#171717" },
+        "bleach": { elem1:null, elem2:null, chance:0.05 }
     },
     tool: function(pixel) {
         if (pixel.element === "paper") {
@@ -8807,6 +9185,9 @@
     reactions: {
         "blood": { elem1:null, elem2:"infection" },
         "water": { elem1:null, elem2:"dirty_water" },
+        "salt_water": { elem1:null, elem2:"dirty_water" },
+        "sugar_water": { elem1:null, elem2:"dirty_water" },
+        "seltzer": { elem1:null, elem2:"dirty_water" },
         "soap": { elem1:null, chance:0.02 },
         "plant": { elem1:null, elem2:"dead_plant" },
         "evergreen": { elem1:null, elem2:"dead_plant" },
@@ -8833,6 +9214,7 @@
         "bee": { elem1:null, elem2:"dead_bug" },
         "stink_bug": { elem1:null, elem2:"dead_bug" },
         "termite": { elem1:null, elem2:"dead_bug" },
+        "spider": { elem1:null, elem2:"dead_bug" },
         "flea": { elem1:null, elem2:"dead_bug" },
         "slug": { elem1:null, elem2:"slime" },
         "snail": { elem1:null, elem2:"limestone" },
@@ -8844,6 +9226,7 @@
         "grass_seed": { elem1:null, elem2:"dead_plant" },
         "meat": { elem1:null, elem2:"rotten_meat" },
         "cheese": { elem1:null, elem2:"rotten_cheese" },
+        "cheese_powder": { elem1:null, elem2:"rotten_cheese" },
         "tree_branch": { elem1:null, elem2:"wood" },
         "mushroom_cap": { elem1:null, elem2:null, chance:0.01 },
         "mushroom_gill": { elem1:null, elem2:null, chance:0.01 },
@@ -8936,6 +9319,7 @@
         "cream": { elem2:"foam", color1:"#CA9D68", chance:0.005},
         "ice_cream": { elem2:null, color1:"#CA9D68", chance:0.005},
         "chocolate": { elem2:null, color1:"#6A3517", chance:0.005},
+        "chocolate_powder": { elem2:null, color1:"#6A3517", chance:0.005},
         "melted_chocolate": { elem2:null, color1:"#6A3517", chance:0.005},
         "water": { elem2:"coffee", tempMin:70, chance:0.2 },
         "salt_water": { elem2:"coffee", tempMin:70, chance:0.2 },
@@ -8981,12 +9365,13 @@
         "worm": { elem1:"amber", elem2:null, chance:0.1 },
         "bee": { elem1:"amber", elem2:null, chance:0.1 },
         "firefly": { elem1:"amber", elem2:null, chance:0.1 },
-        "stinkbug": { elem1:"amber", elem2:null, chance:0.1 },
+        "stink_bug": { elem1:"amber", elem2:null, chance:0.1 },
         "slug": { elem1:"amber", elem2:null, chance:0.1 },
         "snail": { elem1:"amber", elem2:null, chance:0.1 },
+        "spider": { elem1:"amber", elem2:null, chance:0.1 },
     },
     tempHigh: 103.05,
-    stateHigh: ["sugar","smoke","smoke"],
+    stateHigh: ["sugar","steam","smoke","smoke"],
     tempLow: 0,
     stateLowName: "amber",
     burn: 40,
@@ -9059,7 +9444,8 @@
     state: "liquid",
     density: 910,
     stain: 0.01,
-    isFood: true
+    isFood: true,
+    alias: "mayonnaise"
 },
 "grease": {
     color: "#cf9251",
@@ -9276,15 +9662,11 @@
             var x = pixel.x+adjacentCoords[i][0];
             var y = pixel.y+adjacentCoords[i][1];
             if (isEmpty(x,y)) {
-                if (pixel.temp < 200) aired = true;
-                else if (pixel.temp > 2400) {
+                if (pixel.temp > 2400) {
                     createPixel("flash",x,y);
                     pixelMap[x][y].temp = pixel.temp;
                 }
             }
-        }
-        if (aired && Math.random() < 0.05) {
-            changePixel(pixel,"limestone")
         }
     },
     reactions: {
@@ -9415,7 +9797,7 @@
 },
 "molten_thermite": {
     tick: function(pixel) {
-        pixel.temp ++;
+        if (pixel.burning) { pixel.temp ++; }
     },
     reactions: {
         "ice": { "elem1":"explosion" }
@@ -9681,6 +10063,7 @@
     tempLow: 100,
     stateLow: "rain_cloud",
     state: "gas",
+    breakInto: "rain_cloud",
     density: 0.4,
     ignoreAir: true,
     conduct: 0.03
@@ -9701,6 +10084,7 @@
     temp: 70,
     tempHigh: 100,
     stateHigh: "cloud",
+    breakInto: "water",
     tempLow: 0,
     stateLow: "snow_cloud",
     state: "gas",
@@ -9765,9 +10149,14 @@
     color: "#637865",
     behavior: [
         "XX|XX|XX",
-        "XX|CH:acid%0.05|M1%2.5 AND BO",
+        "XX|XX|M1%2.5 AND BO",
         "XX|XX|XX",
     ],
+    tick: function(pixel) {
+        if (pixel.temp > elements.acid.tempLow && pixel.temp < elements.acid.tempHigh && Math.random() <= 0.0005) {
+            changePixel(pixel,"acid")
+        }
+    },
     reactions: {
         "ash": { elem1:"rain_cloud", elem2:null, chance:0.05 },
         "limestone": { elem1:"rain_cloud", elem2:null, chance:0.05 },
@@ -9897,46 +10286,69 @@
     stain: 0.25
 },
 "led_r": {
+    color: "#ff0000",
+    buttonColor: "#660000",
     behavior: behaviors.WALL,
+    renderer: renderPresets.LED,
     reactions: {
         "light": {"charge1":1},
         "liquid_light": {"charge1":1},
     },
-    color: "#660000",
-    colorOn: "#ff0000",
     category: "machines",
     tempHigh: 1500,
     stateHigh: ["molten_glass","molten_glass","molten_glass","molten_gallium"],
     conduct: 1,
-    breakInto: "glass_shard"
+    breakInto: "glass_shard",
+    forceSaveColor: true
 },
 "led_g": {
+    color: "#00ff00",
+    buttonColor: "#006600",
     behavior: behaviors.WALL,
+    renderer: renderPresets.LED,
     reactions: {
         "light": {"charge1":1},
         "liquid_light": {"charge1":1},
     },
-    color: "#006600",
-    colorOn: "#00ff00",
     category: "machines",
     tempHigh: 1500,
     stateHigh: ["molten_glass","molten_glass","molten_glass","molten_gallium"],
     conduct: 1,
-    breakInto: "glass_shard"
+    breakInto: "glass_shard",
+    forceSaveColor: true
 },
 "led_b": {
+    color: "#0000ff",
+    buttonColor: "#000066",
     behavior: behaviors.WALL,
+    renderer: renderPresets.LED,
     reactions: {
         "light": {"charge1":1},
         "liquid_light": {"charge1":1},
     },
-    color: "#000066",
-    colorOn: "#0000ff",
     category: "machines",
     tempHigh: 1500,
     stateHigh: ["molten_glass","molten_glass","molten_glass","molten_gallium"],
     conduct: 1,
-    breakInto: "glass_shard"
+    breakInto: "glass_shard",
+    forceSaveColor: true
+},
+"light_bulb": {
+    color: "#ebebc3",
+    buttonColor: "#a8a897",
+    renderer: renderPresets.LED,
+    behavior: behaviors.WALL,
+    behaviorOn: [
+        "XX|CR:light|XX",
+        "CR:light|XX|CR:light",
+        "XX|CR:light|XX",
+    ],
+    category: "machines",
+    tempHigh: 1500,
+    stateHigh: ["molten_glass","molten_glass","molten_copper"],
+    conduct: 1,
+    breakInto: "glass_shard",
+    forceSaveColor: true
 },
 "sulfur": {
     color: ["#e9d74c","#89761b","#ddc56b"],
@@ -9986,9 +10398,10 @@
         "ant": {elem2:"dead_bug"},
         "fly": {elem2:"dead_bug"},
         "firefly": {elem2:"dead_bug"},
-        "stinkbug": {elem2:"dead_bug"},
+        "stink_bug": {elem2:"dead_bug"},
         "bee": {elem2:"dead_bug"},
         "termite": {elem2:"dead_bug"},
+        "spider": {elem2:"dead_bug"},
         "plant": {elem2:"dead_plant"},
         "grass": {elem2:"dead_plant"},
         "algae": {elem2:null},
@@ -9997,6 +10410,7 @@
         "mushroom_stalk": {elem2:null},
         "mushroom_gill": {elem2:null},
         "mushroom_spore": {elem2:null},
+        "zinc": {stain2:"#2A1210"},
         "sugar": {elem1:"oxidized_copper", elem2:null, color1:["#CB3D3D","#A6292B","#6E1B1B"]},
     },
     tempHigh: 110,
@@ -10062,7 +10476,7 @@
         if (elements.midas_touch.reactions[pixel.element]) { return; }
         if (Math.random() < (elements[pixel.element].hardness || 0.25)) { return; }
         if (elements[pixel.element].state === "liquid") {
-            changePixel(pixel,"midas_touch");
+            changePixel(pixel, (pixel.temp > 500 ? "molten_gold" : "midas_touch"));
         }
         else if (elements[pixel.element].state === "gas") {
             changePixel(pixel,"spray_paint");
@@ -10078,7 +10492,10 @@
     canPlace: true,
     reactions: {
         "gold":{}, "gold_coin":{}, "rose_gold":{}, "blue_gold":{}, "purple_gold":{}, "electrum":{},
-        "molten_gold":{}, "pipe":{}
+        "molten_gold":{}, "pipe":{},
+        "paper": { stain2:"#54803d" },
+        "head": { elem2:"gold" },
+        "body": { elem2:"gold" },
     },
     density: 193,
     state: "liquid",
@@ -10141,6 +10558,7 @@
         "bee": { elem2:["ash","firefly","fly","ant"], chance:0.4 },
         "firefly": { elem2:["ash","bee","fly"], chance:0.4 },
         "stink_bug": { elem2:"ash", chance:0.4 },
+        "spider": { elem2:"ash", chance:0.4 },
         "frog": { elem2:["ash","meat","rotten_meat","cooked_meat","tadpole"], chance:0.4 },
         "tadpole": { elem2:["frog","frog","worm",null], chance:0.4 },
         "fish": { elem2:["ash","meat","rotten_meat","cooked_meat"], chance:0.4 },
@@ -10149,6 +10567,7 @@
         "bone": { elem2:["quicklime","quicklime","quicklime","cancer"], chance:0.4 },
         "meat": { elem2:["ash","rotten_meat","cooked_meat"], chance:0.4 },
         "cheese": { elem2:"rotten_cheese", chance:0.4 },
+        "cheese_powder": { elem2:"rotten_cheese", chance:0.4 },
         "rotten_meat": { elem2:["ash","meat","cooked_meat"], chance:0.4 },
         "cooked_meat": { elem2:["ash","rotten_meat"], chance:0.4 },
         "bamboo": { elem2:["wood","plant","bamboo_plant"], chance:0.4 },
@@ -10331,7 +10750,8 @@
     state: "solid",
     density: 5250,
     conduct: 0.37,
-    hardness: 0.3
+    hardness: 0.3,
+    alias: "iron oxide"
 },
 "oxidized_copper": {
     color: ["#406555","#42564a","#517364"],
@@ -10343,6 +10763,7 @@
     hidden: true,
     tempHigh: 1085,
     stateHigh: "molten_copper",
+    state: "solid",
     density: 8960,
     conduct: 0.85,
     hardness: 0.2,
@@ -10402,7 +10823,7 @@
     hidden: true
 },
 "brick_rubble": {
-    color: ["#cb4141","#ab4d4d","#872626"],
+    color: ["#9c6262","#a13a3a","#cb4141","#872626"],
     behavior: behaviors.POWDER,
     category: "powders",
     tempHigh: 1540,
@@ -10410,7 +10831,6 @@
     state: "solid",
     density: 1650,
     hardness: 0.25,
-    breakInto: "dust",
     hidden: true
 },
 "baked_clay": {
@@ -10529,7 +10949,7 @@
         "ant": {elem2:"dead_bug"},
         "fly": {elem2:"dead_bug"},
         "firefly": {elem2:"dead_bug"},
-        "stinkbug": {elem2:"dead_bug"},
+        "stink_bug": {elem2:"dead_bug"},
         "bee": {elem2:"dead_bug"},
         "glue": {elem1:"slime", elem2:"slime", chance:0.1},
     },
@@ -10678,15 +11098,17 @@
             delete pixel.burning;
             delete pixel.burnStart;
         }
-        if (pixel.temp > 100) {
-            pixel.temp = (pixel.temp+100)/2;
-            pixelTempCheck(pixel);
-            if (pixel.del) {return}
-        }
-        if (pixel.temp < -200) {
-            pixel.temp = (pixel.temp-200)/2;
-            pixelTempCheck(pixel);
-            if (pixel.del) {return}
+        if (!elements[pixel.element].insulate) {
+            if (pixel.temp > 100) {
+                pixel.temp = (pixel.temp+100)/2;
+                pixelTempCheck(pixel);
+                if (pixel.del) {return}
+            }
+            if (pixel.temp < -200) {
+                pixel.temp = (pixel.temp-200)/2;
+                pixelTempCheck(pixel);
+                if (pixel.del) {return}
+            }
         }
         if (pixel.origColor) {
             pixel.color = "rgb("+pixel.origColor.join(",")+")";
@@ -10838,6 +11260,8 @@
         "ruins": { elem2:"rock_wall" },
         "warp": { elem2:null },
         "midas_touch": { elem2:null },
+        "web": { elem2:null },
+        "heat_ray": { elem2:null },
     },
     temp:20,
     state: "gas",
@@ -10900,7 +11324,7 @@
                     pixelMap[x][y].temp = 3500;
                     break;
                 }
-                pixelMap[x][y].temp += 100;
+                if (!elements[pixelMap[x][y].element].insulate) { pixelMap[x][y].temp += 100; }
                 pixelTempCheck(pixelMap[x][y]);
                 break;
             }
@@ -10939,7 +11363,7 @@
                     pixelMap[x][y].temp = -100;
                     break;
                 }
-                pixelMap[x][y].temp -= 25;
+                if (!elements[pixelMap[x][y].element].insulate) { pixelMap[x][y].temp -= 25; }
                 pixelTempCheck(pixelMap[x][y]);
                 break;
             }
@@ -11831,13 +12255,13 @@
                 }
             }
             if (!tryMove(pixel,pixel.x,pixel.y+1,["flash","heat_ray","electric"]) && !skip) {
-                explodeAt(pixel.x,pixel.y,20,"plasma");
+                explodeAt(pixel.x,pixel.y,20,["plasma","heat_ray","flash"]);
                 var coords = circleCoords(pixel.x,pixel.y,15);
                 coords.forEach(function(coord){
                     var x = coord.x;
                     var y = coord.y;
                     if (!isEmpty(x,y,true)) {
-                        pixelMap[x][y].temp += 10000;
+                        if (!elements[pixelMap[x][y].element].insulate) { pixelMap[x][y].temp += 10000; }
                         pixelTempCheck(pixelMap[x][y]);
                     }
                 })
@@ -11885,21 +12309,6 @@
     ignoreConduct: ["plasma"],
     temp: 7065
 },
-"light_bulb": {
-    color: "#a8a897",
-    behavior: behaviors.WALL,
-    behaviorOn: [
-        "XX|CR:light|XX",
-        "CR:light|XX|CR:light",
-        "XX|CR:light|XX",
-    ],
-    colorOn: "#ebebc3",
-    category: "machines",
-    tempHigh: 1500,
-    stateHigh: ["molten_glass","molten_glass","molten_copper"],
-    conduct: 1,
-    breakInto: "glass_shard"
-},
 "shocker": {
     color: "#78784c",
     behavior: behaviors.WALL,
@@ -11918,7 +12327,8 @@
     color: "#8a8a84",
     tick: function(pixel) {
         if (!isEmpty(pixel.x, pixel.y-1, true)){
-            if (pixelMap[pixel.x][pixel.y-1].element != "pressure_plate" || pixelMap[pixel.x][pixel.y-1].on) {
+            if (pixel.min && elements[pixelMap[pixel.x][pixel.y-1].element].density < pixel.min) {}
+            else if (pixelMap[pixel.x][pixel.y-1].element != "pressure_plate" || pixelMap[pixel.x][pixel.y-1].on) {
                 pixel.on = true;
                 var coordsToShock = [
                     [pixel.x, pixel.y+1],
@@ -11941,8 +12351,11 @@
             pixel.on = false;
         }
         tryMove(pixel, pixel.x, pixel.y+1);
+        doDefaults(pixel);
     },
-    category: "machines"
+    category: "machines",
+    state: "solid",
+    density: 7850
 },
 "primordial_soup": {
     color: ["#501f24","#6d2e1d"],
@@ -11993,7 +12406,7 @@
     stain: -0.1
 },
 "molten_slag": {
-    ignore: ["salt","plastic","sulfur","epsom_salt","potassium_salt","borax","solder","ash","dirt","tuff"]
+    ignore: ["salt","plastic","sulfur","epsom_salt","potassium_salt","borax","solder","ash","dirt","tuff","thermite","molten_thermite"]
 },
 "molten_dirt": {
     stateLow: ["mudstone","mudstone","mudstone","mudstone","mudstone","mudstone","mudstone","mudstone","mudstone","mudstone","mudstone","mudstone","rock"]
@@ -12020,9 +12433,9 @@
 "prop": {
     color: ["#d46f50","#d4aa50"],
     onSelect: function(){
-        var answer1 = prompt("Warning - This tool may break Sandboxels if used incorrectly. Avoid using if you don't understand.\n\nEnter a pixel attribute to modify:",(currentProp||undefined));
+        var answer1 = prompt("Warning - This tool may break Sandboxels if used incorrectly. Avoid using if you don't understand.\n\nEnter a pixel attribute to modify:",currentProp);
         if (!answer1) { selectElement("unknown"); return }
-        var answer2 = prompt("Now, enter a value for "+answer1+":",(currentPropValue||undefined));
+        var answer2 = prompt("Now, enter a value for "+answer1+":",currentPropValue);
         if (!answer2) { selectElement("unknown"); return }
         var valueL = answer2.toLowerCase();
         if (valueL === "true") { answer2 = true }
@@ -12045,7 +12458,7 @@
     },
     tool: function(pixel) {
         if (!currentProp) { return }
-        if (currentPropValue !== null && currentPropValue !== undefined && pixel[currentProp] !== undefined && typeof pixel[currentProp] !== typeof currentPropValue) {
+        if (currentPropValue !== null && currentPropValue !== undefined && pixel[currentProp] !== null && pixel[currentProp] !== undefined && typeof pixel[currentProp] !== typeof currentPropValue) {
             logMessage("Error: "+currentProp+" type is "+typeof pixel[currentProp]+", not "+typeof currentPropValue+".");
             currentProp = null;
             currentPropValue = null;
@@ -12058,6 +12471,21 @@
         }
         if (currentProp === "burning" && currentPropValue === "true") {
             pixel.burnStart = pixelTicks;
+            return;
+        }
+        if ((currentProp === "x" || currentProp === "y") && !isNaN(currentPropValue)) {
+            let coords = {x:pixel.x, y:pixel.y};
+            coords[currentProp] = currentPropValue;
+            if (outOfBounds(coords.x,coords.y)) {
+                deletePixel(pixel.x,pixel.y);
+                return;
+            }
+            if (isEmpty(coords.x,coords.y)) {
+                tryMove(pixel,coords.x,coords.y);
+            }
+            else {
+                logMessage("Cannot move pixel")
+            }
             return;
         }
         pixel[currentProp] = currentPropValue;
@@ -12076,8 +12504,23 @@
 
 };
 var currentMonth = new Date().getMonth();
-if (currentMonth == 9) { // October
+if (window.location.href.includes("holiday=false")) {}
+else if (currentMonth == 9) { // October
     elements.pumpkin_seed.hidden = false;
+    var script = document.createElement('script');
+    script.src = "mods/souls.js"
+    document.head.appendChild(script);
+    if (new Date().getDate() >= 30) {
+        elements.body.color = "#bf5c00";
+    }
+    elements.candy.colorPattern = [
+        "W","W","W","W","W",
+        "O","O","O","O","O",
+        "Y","Y","Y","Y","Y",
+    ]
+    elements.candy.colorKey = {"W":"#ffffff", "Y":"#ffcd55", "O":"#ff9933"}
+    elements.candy.color = ["#ffffff","#ffffff","#ff9933","#ff9933","#ffcd55","#ffcd55"]
+    elements.candy.breakIntoColor = ["#ffffff","#ffcd55","#ff9933"]
 }
 else if (currentMonth == 11) { // December
     elements.candy.colorPattern = [
@@ -12094,6 +12537,7 @@ else if (currentMonth == 11) { // December
     ]
     elements.candy.colorKey = {"R":"#c92626", "W":"#e3e3e3"}
     elements.candy.color = ["#c92626","#e3e3e3","#c92626","#e3e3e3","#c92626"]
+    elements.candy.breakIntoColor = ["#c92626","#e3e3e3"]
 }
 
 // Mod Loader
@@ -12223,7 +12667,7 @@ keybinds["KeyL"] = ()=>{ // Open saves
 keybinds["KeyC"] = ()=>{ // Screenshot
     if (!shiftDown) { drawLayers(true); }
     var link = document.createElement('a');
-    link.setAttribute('download', 'sandboxels-screenshot.png');
+    link.setAttribute('download', ((currentSaveData && currentSaveData.name) ? currentSaveData.name : 'sandboxels-screenshot') + ".png");
     link.setAttribute('href', document.getElementById("game").toDataURL("image/png").replace("image/png", "image/octet-stream"));
     document.body.appendChild(link);
     link.click();
@@ -12383,10 +12827,13 @@ if (langCode) {
                 this.element = element;
                 var elementInfo = elements[element];
                 if (elementInfo.colorPattern && settings.textures!==0) {
-                    this.color = elementInfo.colorPattern[y%elementInfo.colorPattern.length][x%elementInfo.colorPattern[0].length];
+                    this.color = pixelColorPick(this, elementInfo.colorPattern[y%elementInfo.colorPattern.length][x%elementInfo.colorPattern[0].length]);
                 }
                 else {
                     this.color = pixelColorPick(this);
+                }
+                if (elementInfo.alpha !== undefined) {
+                    this.alpha = elementInfo.alpha;
                 }
                 // If element doesn't have temp attribute, set temp to airTemp
                 if (elementInfo.temp==undefined) {
@@ -12473,8 +12920,9 @@ if (langCode) {
             if (Array.isArray(element)) {
                 element = element[Math.floor(Math.random()*element.length)];
             }
-            currentPixels.push(new Pixel(x, y, element));
-            if (currentPixels.length > maxPixelCount) {
+            let placed = currentPixels.push(new Pixel(x, y, element));
+            if (!placed) {return};
+            if (currentPixels.length > maxPixelCount || !element) {
                 currentPixels[currentPixels.length-1].del = true;
             }
             else if (elements[element] && elements[element].onPlace !== undefined) {
@@ -12506,6 +12954,7 @@ if (langCode) {
         }
 
         function changePixel(pixel,element,changetemp=true) {
+            if (!element) { return }
             if (elements[pixel.element].onChange !== undefined) {
                 elements[pixel.element].onChange(pixel,element);
             }
@@ -12527,6 +12976,9 @@ if (langCode) {
             }
             delete pixel.origColor; // remove stain
             delete pixel.clone;
+            if (pixel.glow !== undefined) {
+                delete pixel.glow;
+            }
             if (pixel.r && !elementInfo.rotatable) {
                 delete pixel.r;
             }
@@ -12652,6 +13104,36 @@ if (langCode) {
             if (r.stain2) { stainPixel(pixel2,r.stain2,0.05); }
             if (r.func) { r.func(pixel1,pixel2); }
             return r.elem1!==undefined || r.elem2!==undefined;
+        }
+        function releaseElement(pixel,element,count=1,replaceLiquid=false) {
+            count = Math.min(count,8);
+            for (var i = 0; i < squareCoords.length; i++) {
+                var coord = squareCoords[i];
+                var x = pixel.x+coord[0];
+                var y = pixel.y+coord[1];
+                if (isEmpty(x,y)) {
+                    createPixel(element,x,y);
+                    count--;
+                    if (count <= 0) {
+                        return pixelMap[x][y];
+                    }
+                }
+            }
+            if (replaceLiquid) {
+                for (var i = 0; i < squareCoords.length; i++) {
+                    var coord = squareCoords[i];
+                    var x = pixel.x+coord[0];
+                    var y = pixel.y+coord[1];
+                    if (!isEmpty(x,y,true) && elements[pixelMap[x][y].element].state === "liquid") {
+                        changePixel(pixelMap[x][y],element);
+                        count--;
+                        if (count <= 0) {
+                            return pixelMap[x][y];
+                        }
+                    }
+                }
+                
+            }
         }
 
         loadedSounds = {};
@@ -13096,6 +13578,7 @@ behaviorRules = {
     "HT": function() {
         if (!isEmpty(btemp.newCoords.x, btemp.newCoords.y, true)) {
             var newPixel = pixelMap[btemp.newCoords.x][btemp.newCoords.y];
+            if (elements[newPixel.element].insulate) { return }
             if (!(newPixel.element === btemp.pixel.element) || (btemp.newCoords.x == btemp.pixel.x && btemp.newCoords.y == btemp.pixel.y)) {
                 if (btemp.arg != null) {btemp.arg = parseFloat(btemp.arg)}
                 else {btemp.arg = 1}
@@ -13337,7 +13820,15 @@ behaviorRules = {
                     tryMove(pixelMap[coord1.x][coord1.y],coord2.x,coord2.y);
                 }
                 else if (exists1 && exists2) {
-                    swapPixels(pixelMap[coord1.x][coord1.y],pixelMap[coord2.x][coord2.y]);
+                    var pixel1 = pixelMap[coord1.x][coord1.y];
+                    var pixel2 = pixelMap[coord2.x][coord2.y];
+                    swapPixels(pixel1,pixel2);
+                    if (elements[pixel1.element].onMix) {
+                        elements[pixel1.element].onMix(pixel1,pixel2);
+                    }
+                    if (elements[pixel2.element].onMix) {
+                        elements[pixel2.element].onMix(pixel2,pixel1);
+                    }
                 }
             }
         }
@@ -13443,10 +13934,11 @@ behaviorRules = {
         }
 
         function doBurning(pixel) {
-            if (settings.burn === 0) { return }
             if (pixel.burning) { // Burning
+                if (settings.burn === 0) { return }
+                if (pixel.burnStart === undefined) { pixel.burnStart = pixelTicks }
                 var info = elements[pixel.element];
-                pixel.temp += 1;
+                if (!info.insulate) { pixel.temp += 1; }
                 pixelTempCheck(pixel);
                 if (pixel.temp < 0) {
                     delete pixel.burning;
@@ -13472,7 +13964,7 @@ behaviorRules = {
                     }
                 }
 
-                if ((pixelTicks - pixel.burnStart > (info.burnTime || 200)) && Math.floor(Math.random()*100)<(info.burn || 10)) {
+                if ((pixelTicks - pixel.burnStart > (info.burnTime || 200)) && Math.floor(Math.random()*100)<(info.burn || 10) && !(info.burnTime === undefined && info.hardness >= 1)) {
                     var burnInto = info.burnInto;
                     if (burnInto == undefined) {
                         burnInto = "fire";
@@ -13659,13 +14151,14 @@ behaviorRules = {
         }
 
         function pixelColorPick(pixel,customColor=null) {
-            var element = pixel.element;
-            var elementInfo = elements[element];
+            let element = pixel.element;
+            let elementInfo = elements[element];
             //if (elementInfo.behavior instanceof Array) {
             
             if (pixel.charge && elementInfo.colorOn) {
                 customColor = elementInfo.colorOn;
             }
+            let rgb;
             if (customColor != null) {
                 if (Array.isArray(customColor)) {
                     customColor = customColor[Math.floor(Math.random() * customColor.length)];
@@ -13673,25 +14166,27 @@ behaviorRules = {
                 if (customColor.startsWith("#")) {
                     customColor = hexToRGB(customColor);
                 }
-                var rgb = customColor;
+                rgb = customColor;
             }
             else {
-                var rgb = elements[element].colorObject; // {r, g, b}
+                rgb = elements[element].colorObject; // {r, g, b}
                 // If rgb is an array, choose a random item
                 if (Array.isArray(rgb)) {
                     rgb = rgb[Math.floor(Math.random() * rgb.length)];
                 }
             }
             // Randomly darken or lighten the RGB color
-            var coloroffset = Math.floor(Math.random() * (Math.random() > 0.5 ? -1 : 1) * Math.random() * 15);
-            var r = rgb.r + coloroffset;
-            var g = rgb.g + coloroffset;
-            var b = rgb.b + coloroffset;
+            let grain = 15;
+            if (elementInfo.grain !== undefined) { grain = grain * elementInfo.grain }
+            let coloroffset = Math.floor(Math.random() * (Math.random() > 0.5 ? -1 : 1) * Math.random() * grain);
+            let r = rgb.r + coloroffset;
+            let g = rgb.g + coloroffset;
+            let b = rgb.b + coloroffset;
             // Make sure the color is within the RGB range
             r = Math.max(0, Math.min(255, r));
             g = Math.max(0, Math.min(255, g));
             b = Math.max(0, Math.min(255, b));
-            var color = "rgb("+r+","+g+","+b+")";
+            let color = "rgb("+r+","+g+","+b+")";
             
             /*}
             else {
@@ -13725,8 +14220,9 @@ behaviorRules = {
                 if (result === null) {deletePixel(pixel.x,pixel.y);return false}
                 else {
                     if (elements[result].customColor) {
+                        var tempColor = pixel.color;
                         changePixel(pixel,result,false);
-                        pixel.color = color;
+                        pixel.color = tempColor;
                     }
                     else if (elementInfo.stateHighColor) {
                         changePixel(pixel,result,false);
@@ -13753,6 +14249,9 @@ behaviorRules = {
                     if (elementInfo.fireColor && result==="fire") {
                         pixel.color = pixelColorPick(pixel,elementInfo.fireColor);
                     }
+                    if (elementInfo.onStateHigh) {
+                        elementInfo.onStateHigh(pixel);
+                    }
                 }
             }
             // If the pixel's temp <= the elementInfo tempLow, change pixel.element to elementInfo.stateLow
@@ -13772,8 +14271,9 @@ behaviorRules = {
                 if (result === null) {deletePixel(pixel.x,pixel.y);return false}
                 else {
                     if (elements[result].customColor) {
+                        var tempColor = pixel.color;
                         changePixel(pixel,result,false);
-                        pixel.color = color;
+                        pixel.color = tempColor;
                     }
                     else if (elementInfo.stateLowColor) {
                         changePixel(pixel,result,false);
@@ -13797,6 +14297,9 @@ behaviorRules = {
                         pixel.color = "rgb("+r+","+g+","+b+")";
                     }
                     else { changePixel(pixel,result,false); }
+                    if (elementInfo.onStateLow) {
+                        elementInfo.onStateLow(pixel);
+                    }
                 }
             }
             return true;
@@ -13841,6 +14344,7 @@ behaviorRules = {
                 if (e2 < dx) { err += dx; y += sy; }
             }
             var newcoords = [];
+            var done = {};
             // loop through mouseRange(x,y,width) of each coordinate and add to coords if not already in coords
             for (var i = 0; i < coords.length; i++) {
                 var x = coords[i][0];
@@ -13849,7 +14353,9 @@ behaviorRules = {
                 for (var j = 0; j < range.length; j++) {
                     var x2 = range[j][0];
                     var y2 = range[j][1];
-                    if (!coords.indexOf([x2,y2]) > -1) {
+                    if (!done[x2]) { done[x2] = {} }
+                    if (!done[x2][y2]) {
+                        done[x2][y2] = true;
                         newcoords.push([x2,y2]);
                     }
                 }
@@ -14055,6 +14561,9 @@ behaviorRules = {
             else if (version > saveVersion) {
                 alert("This save was made in a newer version of Sandboxels, and may not load correctly. Please use the latest version.")
             }
+            if (saveConfig.height*saveConfig.width >= 1000000) {
+                if (!confirm("This save is very large. Are you sure you want to load it?")) { return }
+            }
             resizeCanvas(saveConfig.height*savePixelSize+savePixelSize,saveConfig.width*savePixelSize+savePixelSize,savePixelSize);
             clearAll(true);
             tempSettings = JSON.stringify(settings);
@@ -14118,6 +14627,7 @@ behaviorRules = {
                         createPixel(pixel.element,x,y);
                         // set the properties
                         for (var prop in pixel) {
+                            // if (!pixelMap[x][y]) continue;
                             pixelMap[x][y][prop] = pixel[prop];
                         }
                     }
@@ -14273,8 +14783,8 @@ behaviorRules = {
             [-1,0]
         ];
         squareCoords = [
-            [0,1],
             [0,-1],
+            [0,1],
             [1,0],
             [-1,0],
             [1,1],
@@ -14288,12 +14798,20 @@ behaviorRules = {
             [1, -1],
             [-1, -1],
         ]
-        squareCoordsShuffle = squareCoords.slice();
-        adjacentCoordsShuffle = adjacentCoords.slice();
         biCoords = [
             [0,1],
             [1,0]
         ];
+        interactCoords = [
+            [0,-1],
+            [1,0],
+            [-1,0],
+            [1,1],
+            [-1,1]
+        ];
+        squareCoordsShuffle = squareCoords.slice();
+        adjacentCoordsShuffle = adjacentCoords.slice();
+        interactCoordsShuffle = interactCoords.slice();
         function clearLayers() {
             const canvasLayerKeys = Object.keys(canvasLayers);
             for (let i = 0; i < canvasLayerKeys.length; i++) {
@@ -14353,13 +14871,11 @@ behaviorRules = {
             }
             if (shaping) {
                 if (shaping === 1) { // Draw a white line from shapeStart.x to shapeStart.y
-                    layerCtx.beginPath();
-                    layerCtx.strokeStyle = "white";
-                    layerCtx.lineWidth = 2;
-                    layerCtx.moveTo(shapeStart.x*pixelSize+pixelSizeHalf, shapeStart.y*pixelSize+pixelSizeHalf);
-                    layerCtx.lineTo(mousePos.x*pixelSize+pixelSizeHalf, mousePos.y*pixelSize+pixelSizeHalf);
-                    layerCtx.stroke();
-                    layerCtx.lineWidth = 1;
+                    let coords = lineCoords(shapeStart.x,shapeStart.y,mousePos.x,mousePos.y);
+                    coords.forEach((coord) => {
+                        if (outOfBounds(coord[0],coord[1])) return;
+                        drawSquare(layerCtx,"rgba(255,255,255,0.5)",coord[0],coord[1],undefined)
+                    })
                 }
             }
         }
@@ -14392,9 +14908,11 @@ behaviorRules = {
         viewInfo = {
             1: { // Normal View (Default)
                 name: "",
+                effects: true,
+                colorEffects: true,
                 pixel: function(pixel,ctx) {
                     var a = (settings.textures !== 0) ? pixel.alpha : undefined;
-                    if ((elements[pixel.element].isGas && elements[pixel.element].glow !== false) || elements[pixel.element].glow || pixel.glow) {
+                    if (((elements[pixel.element].isGas && elements[pixel.element].glow !== false) || elements[pixel.element].glow || pixel.glow) && pixel.glow !== false) {
                         drawPlus(ctx,pixel.color,pixel.x,pixel.y,undefined,a)
                         // if (isEmpty(pixel.x+1,pixel.y) || isEmpty(pixel.x-1,pixel.y) || isEmpty(pixel.x,pixel.y+1) || isEmpty(pixel.x,pixel.y-1)) {}
                     }
@@ -14423,8 +14941,9 @@ behaviorRules = {
             },
             3: { // Basic View
                 name: "basic",
+                colorEffects: true,
                 pixel: function(pixel,ctx) {
-                    drawSquare(ctx,pixel.color,pixel.x,pixel.y)
+                    if (pixel.alpha !== 0) { drawSquare(ctx,pixel.color,pixel.x,pixel.y) }
                     if (pixel.charge && view !== 2) { // Yellow glow on charge
                         if (!elements[pixel.element].colorOn) {
                             drawSquare(ctx,"rgba(255,255,0,0.5)",pixel.x,pixel.y);
@@ -14437,12 +14956,11 @@ behaviorRules = {
             return n*pixelSize;
         }
         function drawDefault(ctx,pixel) {
-            let viewN = view;
-            if (!viewInfo[viewN]) {
-                viewN = 1;
+            if (!viewInfo[view]) {
+                setView(1);
             }
-            if (viewInfo[viewN].pixel) {
-                viewInfo[viewN].pixel(pixel,ctx)
+            if (viewInfo[view].pixel) {
+                viewInfo[view].pixel(pixel,ctx)
             }
         }
         function drawSquare(ctx,color,x,y,scale=1,opacity=1) {
@@ -14481,19 +14999,18 @@ behaviorRules = {
             // Draw the current pixels
             if (!hiding) {
                 let pixelDrawList = pixelsFirst.concat(pixelsLast);
-                let viewN = view;
-                if (!viewInfo[viewN]) {
-                    viewN = 1;
+                if (!viewInfo[view]) {
+                    setView(1);
                 }
                 if (renderPrePixelList.length) {
                     for (let i = 0; i < renderPrePixelList.length; i++) {
                         renderPrePixelList[i](ctx);
                     }
                 }
-                if (viewInfo[viewN].pre) {
-                    viewInfo[viewN].pre(ctx);
+                if (viewInfo[view].pre) {
+                    viewInfo[view].pre(ctx);
                 }
-                if (viewInfo[viewN].pixel) {
+                if (viewInfo[view].pixel) {
                     for (let i = 0; i < pixelDrawList.length; i++) {
                         let pixel = pixelDrawList[i];
                         if (pixelMap[pixel.x][pixel.y] == undefined) {continue}
@@ -14502,7 +15019,7 @@ behaviorRules = {
                             elements[pixel.element].renderer(pixel,ctx);
                         }
                         else {
-                            viewInfo[viewN].pixel(pixel,ctx);
+                            viewInfo[view].pixel(pixel,ctx);
                         }
                         if (renderEachPixelList.length) {
                             for (let i = 0; i < renderEachPixelList.length; i++) {
@@ -14516,8 +15033,8 @@ behaviorRules = {
                         renderPostPixelList[i](ctx);
                     }
                 }
-                if (viewInfo[viewN].post) {
-                    viewInfo[viewN].post(ctx);
+                if (viewInfo[view].post) {
+                    viewInfo[view].post(ctx);
                 }
             }
             if (ctx.globalAlpha < 1) {
@@ -14551,8 +15068,8 @@ behaviorRules = {
         currentElement = "unknown";
         firstElement = "unknown";
         currentColor = "#ff0000";
-        currentProp = null;
-        currentPropValue = null;
+        currentProp = undefined;
+        currentPropValue = undefined;
         currentElementProp = null;
         storedElement = null;
         prevElement = null;
@@ -14644,7 +15161,7 @@ behaviorRules = {
             ctx.drawImage(placingImage,0,0,newWidth,newHeight);
             var newImage = ctx.getImageData(0,0,newWidth,newHeight);
             var elem = (settings.imageelem || "wood");
-            if (!elements[elem] || elements[elem].tool || elements[elem].canPlace===false) { elem = "wood";}
+            if ((!elements[elem] || elements[elem].tool || elements[elem].canPlace===false) && elem !== "paint") { elem = "wood";}
             // loop through each pixel in the ImageData
             for (var x = 0; x < newWidth; x++) {
                 for (var y = 0; y < newHeight; y++) {
@@ -14658,11 +15175,17 @@ behaviorRules = {
                         var pixelX = (placementX||mousePos.x) - Math.round(newWidth/2) + x+1;
                         var pixelY = (placementY||mousePos.y) - Math.round(newHeight/2) + y+1;
                         if (isEmpty(pixelX,pixelY)) {
+                            if (elem === "paint") { continue }
                             createPixel(elem,pixelX,pixelY);
                             pixelMap[pixelX][pixelY].color = pixelColorPick(pixelMap[pixelX][pixelY], RGBToHex([r,g,b]));
                         }
-                        else if (!outOfBounds(pixelX,pixelY) && (shiftDown || mode === "replace")) {
-                            changePixel(pixelMap[pixelX][pixelY],elem);
+                        else if (!outOfBounds(pixelX,pixelY)) {
+                            if (shiftDown || mode === "replace") {
+                                changePixel(pixelMap[pixelX][pixelY],elem);
+                            }
+                            else if (elem !== "paint") {
+                                continue;
+                            }
                             pixelMap[pixelX][pixelY].color = pixelColorPick(pixelMap[pixelX][pixelY], RGBToHex([r,g,b]));
                         }
                     }
@@ -14781,8 +15304,10 @@ behaviorRules = {
                         continue;
                     }
                     // Remove pixel at position from currentPixels
-                    if (!isEmpty(x,y)) {
-                        deletePixel(x,y);
+                    if (!isEmpty(x,y,true)) {
+                        if (!(currentElement === pixelMap[x][y].element && pixelMap[x][y].start === pixelTicks-1)) {
+                            deletePixel(x,y);
+                        }
                     }
                 }
 
@@ -14793,11 +15318,6 @@ behaviorRules = {
                             mixList.push(pixel);
                         }
                     }
-                    continue;
-                }
-                else if (currentElement === "random" && isEmpty(x, y)) {
-                    // create pixel with random element from "randomChoices" array
-                    createPixel(randomChoices[Math.floor(Math.random() * randomChoices.length)],x,y);
                     continue;
                 }
                 else if (elements[currentElement].tool && !(elements[currentElement].canPlace && isEmpty(x,y))) {
@@ -14816,7 +15336,7 @@ behaviorRules = {
                     if (currentPixels.length < maxPixelCount) {
                         createPixel(currentElement,x,y);
                         if (pixelMap[x][y] && currentElement === pixelMap[x][y].element && (elements[currentElement].customColor || elements[currentElement].singleColor)) {
-                            pixelMap[x][y].color = pixelColorPick(currentElement,currentColor);
+                            pixelMap[x][y].color = pixelColorPick(pixelMap[x][y],currentColor);
                         }
                         if (currentElementProp) {
                             for (var key in currentElementProp) {
@@ -14873,17 +15393,11 @@ behaviorRules = {
                 }
                 draggingPixels = null;
             }
-            // If the current element is "pick" or "lookup", coords = [mouseX,mouseY]
-            if (currentElement === "pick" || currentElement === "lookup") {
-                var coords = [[mouseX,mouseY]];
-            }
-            else if (!isMobile) {
-                startPos = startPos || lastPos
-                var coords = lineCoords(startPos.x,startPos.y,mouseX,mouseY);
-            }
-            else {
-                var coords = mouseRange(mouseX,mouseY);
-            }
+            startPos = startPos || lastPos
+            var coords = lineCoords(startPos.x,startPos.y,mouseX,mouseY);
+            // else {
+            //     var coords = mouseRange(mouseX,mouseY);
+            // }
             // For each x,y in coords
             var done = {};
             for (var i = 0; i < coords.length; i++) {
@@ -15060,8 +15574,8 @@ behaviorRules = {
             categoryButton.setAttribute("current", true);
         }
         function setView(n) {
-            if (!viewInfo[n] || n === 1) { // reset view
-                view = null;
+            if (!viewInfo[n]) { // reset view
+                view = 1;
             }
             else {
                 view = n;
@@ -15093,21 +15607,27 @@ behaviorRules = {
             button.className = "elementButton";
             //color of the element
             // if the element color is an array, make a gradient background color, otherwise, set the background color to the element color
-            if (elements[element].color instanceof Array) {
-                if (elements[element].color.length === 1) { button.style.background = elements[element].color; }
-                else { button.style.backgroundImage = "linear-gradient(to bottom right, "+elements[element].color.join(", ")+")"; }
+            let buttonColor = elements[element].buttonColor || elements[element].color;
+            if (buttonColor instanceof Array) {
+                if (buttonColor.length === 1) { button.style.background = buttonColor; }
+                else { button.style.backgroundImage = "linear-gradient(to bottom right, "+buttonColor.join(", ")+")"; }
                 // choose the middlemost item in array
-                var colorObject = elements[element].colorObject[Math.floor(elements[element].colorObject.length/2)];
-                if (elements[element].darkText !== false && (elements[element].darkText || (colorObject.r+colorObject.g+colorObject.b)/3 > 200)) {
-                    button.className += " bright"
+                if (elements[element].color instanceof Array) {
+                    var colorObject = elements[element].colorObject[Math.floor(elements[element].colorObject.length/2)];
+                    if (elements[element].darkText !== false && (elements[element].darkText || (colorObject.r+colorObject.g+colorObject.b)/3 > 200)) {
+                        button.className += " bright"
+                    }
                 }
             }
             else {
-                button.style.background = elements[element].color;
+                button.style.background = buttonColor;
                 var colorObject = elements[element].colorObject;
                 if (elements[element].darkText !== false && (elements[element].darkText || (colorObject.r+colorObject.g+colorObject.b)/3 > 200)) {
                     button.className += " bright"
                 }
+            }
+            if (elements[element].buttonGlow) {
+                button.style.boxShadow = "0px 0px 20px "+elements[element].buttonGlow
             }
             button.id = "elementButton-" + element;
             button.onclick = handleElementButtonClick;
@@ -15542,7 +16062,7 @@ behaviorRules = {
         }
         randomEventChoices = {
             "falling_pixel": ["fireball","fallout","seeds",["bomb","cold_bomb"],"human","gold_coin","feather","glitter","homunculus","egg","frozen_frog","sapling","smoke_grenade","party_popper","lightning","frozen_worm","pinecone","cactus","earthquake","tornado"],
-            "element_circle": ["carbon_dioxide","primordial_soup","fly","steam","oxygen","sugar","bee","firefly","tadpole","flash","foam","bless","liquid_light"],
+            "element_circle": ["carbon_dioxide","primordial_soup","fly","steam","oxygen","sugar","bee","firefly","tadpole","flash","foam","bless","liquid_light","spider"],
             "explosion": ["fire","cold_fire","methane","electric","light","laser","radiation","plasma","liquid_nitrogen","liquid_helium","liquid_neon","acid_gas","fw_ember","malware",["stench","plague"],["firework","fire","fire"],"bubble","confetti","balloon","dye","bless"]
         }
         function doRandomEvents() {
@@ -15564,7 +16084,7 @@ behaviorRules = {
         function updateStats() {
             var statsDiv = document.getElementById("stats");
             var stats = "<span id='stat-pos' class='stat'>x"+mousePos.x+",y"+mousePos.y+"</span>";
-            stats += "<span id='stat-pixels' class='stat"+ (currentPixels.length >= maxPixelCount ? " redText" : "") +"'>Pxls:" + currentPixels.length+"</span>";
+            stats += "<span id='stat-pixels' class='stat"+ (currentPixels.length >= Math.min(maxPixelCount,(height-1)*(width-1)) ? " redText" : "") +"'>Pxls:" + currentPixels.length+"</span>";
             stats += "<span id='stat-tps' class='stat'>" + tps+"tps</span>";
             stats += "<span id='stat-ticks' class='stat'>" + pixelTicks+"</span>";
             if ((typeof pixelMap).length === 9) { return; }
@@ -15574,19 +16094,22 @@ behaviorRules = {
                     stats += "<span id='stat-element' class='stat'>Elem:"+(elements[currentPixel.element].name || currentPixel.element).toUpperCase()+"</span>";
                     stats += "<span id='stat-temperature' class='stat'>Temp:"+formatTemp(currentPixel.temp)+"</span>";
                     if (currentPixel.charge) {
-                        stats += "<span id='stat-charge' class='stat'>C"+currentPixel.charge+"</span>";
+                        stats += "<span id='stat-charge' class='stat'>C"+parseFloat(currentPixel.charge)+"</span>";
                     }
                     if (currentPixel.burning) {
                         stats += "<span id='stat-burning' class='stat'>Burning</span>";
                     }
                     if (elements[currentPixel.element].hoverStat) {
-                        stats += "<span id='stat-hover' class='stat'>"+elements[currentPixel.element].hoverStat(currentPixel).replaceAll("<","&lt;")+"</span>";
+                        stats += "<span id='stat-hover' class='stat'>"+elements[currentPixel.element].hoverStat(currentPixel).toString().replaceAll("<","&lt;")+"</span>";
+                    }
+                    else if (elements[currentElement].toolHoverStat) {
+                        stats += "<span id='stat-hover' class='stat'>"+elements[currentElement].toolHoverStat(currentPixel).toString().replaceAll("<","&lt;")+"</span>";
                     }
                     else if (currentPixel.clone) {
-                        stats += "<span id='stat-clone' class='stat'>"+currentPixel.clone.toUpperCase().replaceAll("<","&lt;")+"</span>";
+                        stats += "<span id='stat-clone' class='stat'>"+currentPixel.clone.toString().toUpperCase().replaceAll("<","&lt;")+"</span>";
                     }
                     else if (currentPixel.con && currentPixel.con.element) {
-                        stats += "<span id='stat-clone' class='stat'>"+currentPixel.con.element.toUpperCase().replaceAll("<","&lt;")+"</span>";
+                        stats += "<span id='stat-clone' class='stat'>"+currentPixel.con.element.toString().toUpperCase().replaceAll("<","&lt;")+"</span>";
                     }
                 }
             }
@@ -15652,57 +16175,57 @@ behaviorRules = {
                 else {return "<span class='infoLink' onclick='showInfo(\""+l+"\")'>"+l.toUpperCase().replace(/_/g," ")+"</span>";}
             }
         }
-        function showInfo(element,back=false) { // this is such a mess please don't look at it
-            showingMenu = "info";
-            var infoParent = document.getElementById("infoParent");
-            infoParent.style.display = "block";
-            var infoSearch = document.getElementById("infoSearch");
-            infoSearch.focus();
-            var infoTitle = document.getElementById("infoTitle");
-            var infoText = document.getElementById("infoText");
-            var error = false;
-            if (element != undefined) {
-                // replace all spaces with underscores
-                element = element.replace(/ /g,"_").toLowerCase();
-                infoSearch.value = element.toUpperCase();
-                info = elements[element];
-                if (info) {
-                    infoTitle.innerHTML = info.name || element.replace(/_/g," ");
-                    infoTitle.innerHTML = infoTitle.innerHTML.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-                    infoText.innerHTML = "";
-                    if (info.hidden && !settings.unlocked[element]) { infoText.innerHTML += "\nYou haven't discovered this yet.\n" }
-                    if (info.color) {
-                        if (!(info.color instanceof Array)) {
-                            infoText.innerHTML += "\nColor: <span style='background-color:"+info.color+"'>     </span>";
-                        }
-                        else {
-                            //gradient
-                            var gradient = info.color;
-                            var gradientString = "linear-gradient(to right";
-                            for (var i = 0; i < gradient.length; i++) {
-                                gradientString += ", "+gradient[i]+" "+(i*100/gradient.length)+"%";
-                            }
-                            gradientString += ")";
-                            infoText.innerHTML += "\nColor: <span style='background:"+gradientString+"'>     </span>";
-                        }
+function showInfo(element,back=false) { // this is such a mess please don't look at it
+    showingMenu = "info";
+    var infoParent = document.getElementById("infoParent");
+    infoParent.style.display = "block";
+    var infoSearch = document.getElementById("infoSearch");
+    infoSearch.focus();
+    var infoTitle = document.getElementById("infoTitle");
+    var infoText = document.getElementById("infoText");
+    var error = false;
+    if (element != undefined) {
+        // replace all spaces with underscores
+        element = element.replace(/ /g,"_").toLowerCase();
+        infoSearch.value = element.toUpperCase();
+        info = elements[element];
+        if (info) {
+            infoTitle.innerHTML = info.name || element.replace(/_/g," ");
+            infoTitle.innerHTML = infoTitle.innerHTML.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+            infoText.innerHTML = "";
+            if (info.hidden && !settings.unlocked[element]) { infoText.innerHTML += "\nYou haven't discovered this yet.\n" }
+            if (info.color) {
+                if (!(info.color instanceof Array)) {
+                    infoText.innerHTML += "\nColor: <span style='background-color:"+info.color+"'>     </span>";
+                }
+                else {
+                    //gradient
+                    var gradient = info.color;
+                    var gradientString = "linear-gradient(to right";
+                    for (var i = 0; i < gradient.length; i++) {
+                        gradientString += ", "+gradient[i]+" "+(i*100/gradient.length)+"%";
                     }
-                    if (info.desc) {
-                        infoText.innerHTML += "\n"+info.desc;
-                    }
-                    else if (info.extraInfo) {
-                        infoText.innerHTML += "\n"+info.extraInfo;
-                    }
+                    gradientString += ")";
+                    infoText.innerHTML += "\nColor: <span style='background:"+gradientString+"'>     </span>";
+                }
+            }
+            if (info.desc) {
+                infoText.innerHTML += "\n"+info.desc;
+            }
+            else if (info.extraInfo) {
+                infoText.innerHTML += "\n"+info.extraInfo;
+            }
 
-                    var moves = false;
-                    var deletes = [];
-                    var swaps = [];
-                    var creates = [];
-                    var heats = false;
-                    var cools = false;
-                    var clones = false;
-                    var explodes = false;
-                    var sticks = [];
-                    if (info.behavior) {
+            var moves = false;
+            var deletes = [];
+            var swaps = [];
+            var creates = [];
+            var heats = false;
+            var cools = false;
+            var clones = false;
+            var explodes = false;
+            var sticks = [];
+            if (info.behavior) {
 // for x and y in behavior array
 for (var i = 0; i < info.behavior.length; i++) {
 for (var j = 0; j < info.behavior[i][1].length; j++) {
@@ -15753,199 +16276,200 @@ for (var k = 0; k < b0.split(" AND ").length; k++) {
 
 
 }}}}
-                    // make sure deletes, swaps, creates, and sticks have no duplicate items
-                    deletes = deletes.filter(function(item, pos) {return deletes.indexOf(item) == pos;});
-                    swaps = swaps.filter(function(item, pos) {return swaps.indexOf(item) == pos;});
-                    creates = creates.filter(function(item, pos) {return creates.indexOf(item) == pos;});
-                    sticks = sticks.filter(function(item, pos) {return sticks.indexOf(item) == pos;});
-                    if ((info.category == "tools" || info.tool) && !info.canPlace) { infoText.innerHTML += "\nTool."}
-                    else {
-                        if (!moves && info.behavior) { infoText.innerHTML += "\nStationary."; }
-                        if (info.category) { infoText.innerHTML += "\nCategory: "+infoLink(info.category)+"."; }
-                    if (info.noMix) { infoText.innerHTML += "\nWon't mix without Shift."; }
-                    if (info.conduct) { infoText.innerHTML += "\nConducts electricity."; }
-                    if (swaps.length > 0) { infoText.innerHTML += "\nMoves through "+infoLink(swaps)+"."; }
-                    if (creates.length > 0) { infoText.innerHTML += "\nMakes "+infoLink(creates)+"."; }
-                    if (clones) { infoText.innerHTML += "\nClones self." }
-                    if (deletes.length > 0) { infoText.innerHTML += "\nDeletes "+infoLink(deletes)+"."; }
-                    if (heats) { infoText.innerHTML += "\nHeats pixels." }
-                    if (cools) { infoText.innerHTML += "\nCools pixels." }
-                    if (sticks.length > 0) { infoText.innerHTML += "\nSticks to "+infoLink(sticks)+"."; }
-                    if (explodes) { infoText.innerHTML += "\nExplodes." }
-                    if (settings["unhide"]!==1 && info.hidden) { infoText.innerHTML += "\nHidden by default."; }
-                    if (info.density != undefined) { infoText.innerHTML += "\nDensity: "+formatDensity(info.density)+"."; }
-                    if (info.tempHigh != undefined) {
-                        infoText.innerHTML += "\nTurns into "+infoLink(info.stateHigh)+" above "+formatTemp(info.tempHigh)+".";
-                    }
-                    if (info.tempLow != undefined) {
-                        infoText.innerHTML += "\nTurns into "+infoLink(info.stateLow)+" below "+formatTemp(info.tempLow)+".";
-                    }
-                    if (info.breakInto === null) {
-                        infoText.innerHTML += "\nDisappears when broken.";
-                    }
-                    else if (info.breakInto != undefined) {
-                        infoText.innerHTML += "\nBreaks into "+infoLink(info.breakInto)+".";
-                    }
-                    if (info.burn != undefined) { infoText.innerHTML += "\nFlammability: "+info.burn+"%."; }
-                    if (info.burnTime != undefined) {
-                        infoText.innerHTML += "\nBurns for "+info.burnTime+" tick";
-                        if (info.burnTime != 1) { infoText.innerHTML += "s"; }
-                        infoText.innerHTML += ".";
-                    }
-                    if (info.burnInto) { infoText.innerHTML += "\nBurns into "+infoLink(info.burnInto)+"."; }
-                    if (info.fireColor) {
-                        if (!(info.fireColor instanceof Array)) {
-                            infoText.innerHTML += "\nFlame Color: <span style='background-color:"+info.fireColor+"'>     </span>";
-                        }
-                        else {
-                            //gradient
-                            var gradient = info.fireColor;
-                            var gradientString = "linear-gradient(to right";
-                            for (var i = 0; i < gradient.length; i++) {
-                                gradientString += ", "+gradient[i]+" "+(i*100/gradient.length)+"%";
-                            }
-                            gradientString += ")";
-                            infoText.innerHTML += "\nFlame Color: <span style='background:"+gradientString+"'>     </span>";
-                        }
-                    }
-                    if (info.stain) {
-                        if (info.stain < 0) { infoText.innerHTML += "\nCleans stains."; }
-                        else { infoText.innerHTML += "\nStains solids."; }
-                    }
-                    if (info.customColor) { infoText.innerHTML += "\nColor is customizable."; }
-                    }
-
-                    if (info.reactions) {
-                        infoText.innerHTML += "\nReacts with " + infoLink(Object.keys(info.reactions)) + ".";
-                    }
-                    if (info.related) {
-                        infoText.innerHTML += "\n\n";
-                        var related = info.related;
-                        if (typeof related == "string") {related = [related];}
-                        infoText.innerHTML += "See Also: "+infoLink(related)+".";
-                    }
-                    if (info.alias) {
-                        infoText.innerHTML += "\n\n";
-                        var alias = info.alias;
-                        if (typeof alias == "string") {alias = [alias];}
-                        infoText.innerHTML += "Also known as "+alias.join(", ").toUpperCase()+".";
-                    }
-                }
-                else if (categoryList.indexOf(element) !== -1) {
-                    infoTitle.innerHTML = element;
-                    infoTitle.innerHTML = infoTitle.innerHTML.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-                    var matchingCategory = [];
-                    // loop through all elements, and add to matchingCategory if it matches the category
-                    for (e in elements) {
-                        if (elements[e].category === element) {
-                            matchingCategory.push(e);
-                        }
-                    }
-                    infoText.innerHTML = "\nCategory of "+matchingCategory.length+".\n\n";
-                    // infoLink of each item in matchingCategory on new lines
-                    var temptext = "";
-                    for (var i = 0; i < matchingCategory.length; i++) {
-                        temptext += infoLink(matchingCategory[i]) + "\n";
-                    }
-                    infoText.innerHTML += temptext;
-                }
-                else if (element.indexOf(",") !== -1) {
-                    infoTitle.innerHTML = "Lookup";
-                    // split by , and add an infoLink of each to infoText.innerHTML
-                    var split = element.split(",");
-                    var temptext = "";
-                    for (var i = 0; i < split.length; i++) {
-                        temptext += "\n" + infoLink(split[i]);
-                    }
-                    infoText.innerHTML = temptext;
-                    infoSearch.value = "";
-                }
-                else if (element === "") {
-                    infoTitle.innerHTML = "Browse";
-                    infoText.innerHTML = "\n"+infoLink("all")+" • "+infoLink("undiscovered")+" • "+infoLink("discovered")+"\n\n";
-                    var temptext = "";
-                    for (var i = 0; i < categoryList.length; i++) {
-                        temptext += infoLink(categoryList[i]) + "\n";
-                    }
-                    infoText.innerHTML += temptext+infoLink("hidden");
-                }
-                else if (element === "undiscovered") {
-                    infoTitle.innerHTML = "Undiscovered";
-                    var temptext = "";
-                    var n = 0;
-                    for (e in elements) {
-                        if (elements[e].hidden && !settings.unlocked[e]) {
-                            temptext += infoLink(e) + "\n";
-                            n++;
-                        }
-                    }
-                    // sort temptext lines alphabetically
-                    temptext = temptext.split("\n"); temptext.sort(); temptext = temptext.join("\n");
-                    infoTitle.innerHTML += " ("+n+")";
-                    if (temptext === "") { temptext = "You discovered everything!\n\nJoin our <a href='https://discord.gg/ejUc6YPQuS'>Discord</a> to stay up to date with updates."; }
-                    infoText.innerHTML = temptext;
-                }
-                else if (element === "all") {
-                    infoTitle.innerHTML = "All ("+elementCount+")";
-                    var temptext = "";
-                    for (e in elements) { temptext += infoLink(e) + "\n"; }
-                    // sort temptext lines alphabetically
-                    temptext = temptext.split("\n"); temptext.sort(); temptext = temptext.join("\n");
-                    infoText.innerHTML = temptext;
-                }
-                else if (element === "discovered") {
-                    infoTitle.innerHTML = "Discovered";
-                    var temptext = "";
-                    var n = 0;
-                    for (e in elements) {
-                        if (!elements[e].hidden || settings.unlocked[e]) {
-                            temptext += infoLink(e) + "\n";
-                            n++;
-                        }
-                    }
-                    // sort temptext lines alphabetically
-                    temptext = temptext.split("\n"); temptext.sort(); temptext = temptext.join("\n");
-                    infoTitle.innerHTML += " ("+n+")";
-                    infoText.innerHTML = temptext;
-                }
-                else if (element === "hidden") {
-                    infoTitle.innerHTML = "Hidden ("+hiddenCount+")";
-                    var temptext = "";
-                    for (e in elements) {
-                        if (elements[e].hidden) { temptext += infoLink(e) + "\n"; }
-                    }
-                    // sort temptext lines alphabetically
-                    temptext = temptext.split("\n"); temptext.sort(); temptext = temptext.join("\n");
-                    if (temptext === "") { temptext = "You discovered everything!\n\nJoin our <a href='https://discord.gg/ejUc6YPQuS'>Discord</a> to stay up to date with updates."; }
-                    infoText.innerHTML = temptext;
-                }
-                else if (element === "air") {
-                    infoTitle.innerHTML = "Air";
-                    infoText.innerHTML = "\nColor: <span>     </span>\nCategory: "+infoLink("gases")+".\nDensity: "+formatDensity(airDensity)+"."
-                }
-                else {
-                    infoTitle.innerHTML = "";
-                    infoText.innerHTML = "";
-                    error = true;
-                }
+        // make sure deletes, swaps, creates, and sticks have no duplicate items
+        deletes = deletes.filter(function(item, pos) {return deletes.indexOf(item) == pos;});
+        swaps = swaps.filter(function(item, pos) {return swaps.indexOf(item) == pos;});
+        creates = creates.filter(function(item, pos) {return creates.indexOf(item) == pos;});
+        sticks = sticks.filter(function(item, pos) {return sticks.indexOf(item) == pos;});
+        if ((info.category == "tools" || info.tool) && !info.canPlace) { infoText.innerHTML += "\nTool."}
+        else {
+            if (!moves && info.behavior) { infoText.innerHTML += "\nStationary."; }
+            if (info.category) { infoText.innerHTML += "\nCategory: "+infoLink(info.category)+"."; }
+        if (info.noMix) { infoText.innerHTML += "\nWon't mix without Shift."; }
+        if (info.conduct) { infoText.innerHTML += "\nConducts electricity."; }
+        if (swaps.length > 0) { infoText.innerHTML += "\nMoves through "+infoLink(swaps)+"."; }
+        if (creates.length > 0) { infoText.innerHTML += "\nMakes "+infoLink(creates)+"."; }
+        if (clones) { infoText.innerHTML += "\nClones self." }
+        if (deletes.length > 0) { infoText.innerHTML += "\nDeletes "+infoLink(deletes)+"."; }
+        if (heats) { infoText.innerHTML += "\nHeats pixels." }
+        if (cools) { infoText.innerHTML += "\nCools pixels." }
+        if (sticks.length > 0) { infoText.innerHTML += "\nSticks to "+infoLink(sticks)+"."; }
+        if (explodes) { infoText.innerHTML += "\nExplodes." }
+        if (info.hardness >= 1) { infoText.innerHTML += "\nUnbreakable." }
+        if (settings["unhide"]!==1 && info.hidden) { infoText.innerHTML += "\nHidden by default."; }
+        if (info.density != undefined) { infoText.innerHTML += "\nDensity: "+formatDensity(info.density)+"."; }
+        if (info.tempHigh != undefined) {
+            infoText.innerHTML += "\nTurns into "+infoLink(info.stateHigh)+" above "+formatTemp(info.tempHigh)+".";
+        }
+        if (info.tempLow != undefined) {
+            infoText.innerHTML += "\nTurns into "+infoLink(info.stateLow)+" below "+formatTemp(info.tempLow)+".";
+        }
+        if (info.breakInto === null) {
+            infoText.innerHTML += "\nDisappears when broken.";
+        }
+        else if (info.breakInto != undefined) {
+            infoText.innerHTML += "\nBreaks into "+infoLink(info.breakInto)+".";
+        }
+        if (info.burn != undefined) { infoText.innerHTML += "\nFlammability: "+info.burn+"%."; }
+        if (info.burnTime != undefined) {
+            infoText.innerHTML += "\nBurns for "+info.burnTime+" tick";
+            if (info.burnTime != 1) { infoText.innerHTML += "s"; }
+            infoText.innerHTML += ".";
+        }
+        if (info.burnInto) { infoText.innerHTML += "\nBurns into "+infoLink(info.burnInto)+"."; }
+        if (info.fireColor) {
+            if (!(info.fireColor instanceof Array)) {
+                infoText.innerHTML += "\nFlame Color: <span style='background-color:"+info.fireColor+"'>     </span>";
             }
             else {
-                infoTitle.innerHTML = "";
-                infoText.innerHTML = "";
-            }
-            infoText.innerHTML += "\n\n\n\n";
-            if (error) { infoSearch.style.backgroundColor = "rgb(100, 33, 33)"; }
-            else {
-                infoSearch.style.backgroundColor = "rgb(66, 66, 66)";
-                if (!back && infoHistory[infoHistory.length-1] !== element) {infoHistory.push(element);}
-            }
-            if (infoHistory.length > 1) {
-                document.getElementById("infoBackButton").style.display = "inline-block";
-            }
-            else {
-                document.getElementById("infoBackButton").style.display = "none";
+                //gradient
+                var gradient = info.fireColor;
+                var gradientString = "linear-gradient(to right";
+                for (var i = 0; i < gradient.length; i++) {
+                    gradientString += ", "+gradient[i]+" "+(i*100/gradient.length)+"%";
+                }
+                gradientString += ")";
+                infoText.innerHTML += "\nFlame Color: <span style='background:"+gradientString+"'>     </span>";
             }
         }
+        if (info.stain) {
+            if (info.stain < 0) { infoText.innerHTML += "\nCleans stains."; }
+            else { infoText.innerHTML += "\nStains solids."; }
+        }
+        if (info.customColor) { infoText.innerHTML += "\nColor is customizable."; }
+        }
+
+        if (info.reactions) {
+            infoText.innerHTML += "\nReacts with " + infoLink(Object.keys(info.reactions)) + ".";
+        }
+        if (info.related) {
+            infoText.innerHTML += "\n\n";
+            var related = info.related;
+            if (typeof related == "string") {related = [related];}
+            infoText.innerHTML += "See Also: "+infoLink(related)+".";
+        }
+        if (info.alias) {
+            infoText.innerHTML += "\n\n";
+            var alias = info.alias;
+            if (typeof alias == "string") {alias = [alias];}
+            infoText.innerHTML += "Also known as "+alias.join(", ").toUpperCase()+".";
+        }
+    }
+    else if (categoryList.indexOf(element) !== -1) {
+        infoTitle.innerHTML = element;
+        infoTitle.innerHTML = infoTitle.innerHTML.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+        var matchingCategory = [];
+        // loop through all elements, and add to matchingCategory if it matches the category
+        for (e in elements) {
+            if (elements[e].category === element) {
+                matchingCategory.push(e);
+            }
+        }
+        infoText.innerHTML = "\nCategory of "+matchingCategory.length+".\n\n";
+        // infoLink of each item in matchingCategory on new lines
+        var temptext = "";
+        for (var i = 0; i < matchingCategory.length; i++) {
+            temptext += infoLink(matchingCategory[i]) + "\n";
+        }
+        infoText.innerHTML += temptext;
+    }
+    else if (element.indexOf(",") !== -1) {
+        infoTitle.innerHTML = "Lookup";
+        // split by , and add an infoLink of each to infoText.innerHTML
+        var split = element.split(",");
+        var temptext = "";
+        for (var i = 0; i < split.length; i++) {
+            temptext += "\n" + infoLink(split[i]);
+        }
+        infoText.innerHTML = temptext;
+        infoSearch.value = "";
+    }
+    else if (element === "") {
+        infoTitle.innerHTML = "Browse";
+        infoText.innerHTML = "\n"+infoLink("all")+" • "+infoLink("undiscovered")+" • "+infoLink("discovered")+"\n\n";
+        var temptext = "";
+        for (var i = 0; i < categoryList.length; i++) {
+            temptext += infoLink(categoryList[i]) + "\n";
+        }
+        infoText.innerHTML += temptext+infoLink("hidden");
+    }
+    else if (element === "undiscovered") {
+        infoTitle.innerHTML = "Undiscovered";
+        var temptext = "";
+        var n = 0;
+        for (e in elements) {
+            if (elements[e].hidden && !settings.unlocked[e]) {
+                temptext += infoLink(e) + "\n";
+                n++;
+            }
+        }
+        // sort temptext lines alphabetically
+        temptext = temptext.split("\n"); temptext.sort(); temptext = temptext.join("\n");
+        infoTitle.innerHTML += " ("+n+")";
+        if (temptext === "") { temptext = "You discovered everything!\n\nJoin our <a href='https://discord.gg/ejUc6YPQuS'>Discord</a> to stay up to date with updates."; }
+        infoText.innerHTML = temptext;
+    }
+    else if (element === "all") {
+        infoTitle.innerHTML = "All ("+elementCount+")";
+        var temptext = "";
+        for (e in elements) { temptext += infoLink(e) + "\n"; }
+        // sort temptext lines alphabetically
+        temptext = temptext.split("\n"); temptext.sort(); temptext = temptext.join("\n");
+        infoText.innerHTML = temptext;
+    }
+    else if (element === "discovered") {
+        infoTitle.innerHTML = "Discovered";
+        var temptext = "";
+        var n = 0;
+        for (e in elements) {
+            if (!elements[e].hidden || settings.unlocked[e]) {
+                temptext += infoLink(e) + "\n";
+                n++;
+            }
+        }
+        // sort temptext lines alphabetically
+        temptext = temptext.split("\n"); temptext.sort(); temptext = temptext.join("\n");
+        infoTitle.innerHTML += " ("+n+")";
+        infoText.innerHTML = temptext;
+    }
+    else if (element === "hidden") {
+        infoTitle.innerHTML = "Hidden ("+hiddenCount+")";
+        var temptext = "";
+        for (e in elements) {
+            if (elements[e].hidden) { temptext += infoLink(e) + "\n"; }
+        }
+        // sort temptext lines alphabetically
+        temptext = temptext.split("\n"); temptext.sort(); temptext = temptext.join("\n");
+        if (temptext === "") { temptext = "You discovered everything!\n\nJoin our <a href='https://discord.gg/ejUc6YPQuS'>Discord</a> to stay up to date with updates."; }
+        infoText.innerHTML = temptext;
+    }
+    else if (element === "air") {
+        infoTitle.innerHTML = "Air";
+        infoText.innerHTML = "\nColor: <span>     </span>\nCategory: "+infoLink("gases")+".\nDensity: "+formatDensity(airDensity)+"."
+    }
+    else {
+        infoTitle.innerHTML = "";
+        infoText.innerHTML = "";
+        error = true;
+    }
+    }
+    else {
+        infoTitle.innerHTML = "";
+        infoText.innerHTML = "";
+    }
+    infoText.innerHTML += "\n\n\n\n";
+    if (error) { infoSearch.style.backgroundColor = "rgb(100, 33, 33)"; }
+    else {
+        infoSearch.style.backgroundColor = "rgb(66, 66, 66)";
+        if (!back && infoHistory[infoHistory.length-1] !== element) {infoHistory.push(element);}
+    }
+    if (infoHistory.length > 1) {
+        document.getElementById("infoBackButton").style.display = "inline-block";
+    }
+    else {
+        document.getElementById("infoBackButton").style.display = "none";
+    }
+}
         infoHistory = [];
         function infoBack() {
             if (infoHistory.length > 0) {
@@ -16005,7 +16529,7 @@ for (var k = 0; k < b0.split(" AND ").length; k++) {
         function addMod(url,noMessage) {
             // remove trailing slashes
             while (url.charAt(url.length-1) == "/") { url = url.substring(0, url.length-1); }
-            url = url.replaceAll(/['‘’“”"\$\{\}]/g,"");
+            url = url.replaceAll(/['‘’“”"\$\{\}\\]/g,"");
             // if the mod is in enabledMods, return
             for (var i = 0; i < enabledMods.length; i++) {
                 if (enabledMods[i] == url) { return; }
@@ -16236,7 +16760,7 @@ for (var k = 0; k < b0.split(" AND ").length; k++) {
         pixelTicks = 0;
 
         mode = null;
-        view = null;
+        view = 1;
         if (settings.view) {
             setView(settings.view)
         }
@@ -16530,7 +17054,8 @@ window.onload = function() {
             elements[key].color = "rgb(255,255,255)";
             elements[key].colorObject = {r:255,g:255,b:255};
         }
-        if (elements[key].movable === undefined) {
+        if (elements[key].movable === false) { delete elements[key].movable }
+        else if (elements[key].movable === undefined) {
             // If the element's behavior is an array and contains M1 or M2, set its movable to true
             if (elements[key].behavior && typeof elements[key].behavior[0] === "object") {
                 var bstring = JSON.stringify(elements[key].behavior);
@@ -16712,14 +17237,14 @@ window.onload = function() {
                 for (var j = 0; j < line.length; j++) {
                     var char = line[j];
                     if (elements[key].colorKey[char]) {
-                        if (elements[key].colorKey[char].startsWith("#")) {
-                            var rgb = hexToRGB(elements[key].colorKey[char]);
-                            elements[key].colorKey[char] = "rgb("+rgb.r+","+rgb.g+","+rgb.b+")";
-                        }
+                        // if (elements[key].colorKey[char].startsWith("#")) {
+                        //     var rgb = hexToRGB(elements[key].colorKey[char]);
+                        //     elements[key].colorKey[char] = "rgb("+rgb.r+","+rgb.g+","+rgb.b+")";
+                        // }
                         newPattern[i].push(elements[key].colorKey[char]);
                     }
                     else {
-                        newPattern[i].push("rgb(255,255,255)");
+                        newPattern[i].push("#ffffff");
                     }
                 }
             }
@@ -17183,7 +17708,7 @@ window.onload = function() {
             <div id="stats"></div>
             <div id="controls">
                 <div id="toolControls">
-                    <button id="shiftButton" title="Toggle Shift key" class="controlButton" onclick='toggleShift();focusGame();' on="false" style="display:none">↑</button><button id="pauseButton" title="Pause/play the simulation" class="controlButton" onclick='togglePause();focusGame();' on="false">Pause</button><button id="frameButton" title="Pause and play one frame" class="controlButton" onclick='doFrame();focusGame();' on="false">&gt;</button><button id="sizeDownButton" title="Decrease the brush size" class="controlButton" onclick="mouseSize -= shiftDown?mouseSize-1:2;checkMouseSize(true);centerMouse();focusGame();">-</button><button id="sizeUpButton" title="Increase the brush size" class="controlButton" onclick="mouseSize += shiftDown?14:2;checkMouseSize(true);centerMouse();focusGame();">+</button><button id="resetButton" title="Clear the entire scene" class="controlButton" onclick="resetPrompt();focusGame();">Reset</button><button id="replaceButton" title="Override existing pixels when placing" class="controlButton" onclick='if (mode == "replace") {mode = null;this.setAttribute("on","false");}else {mode = "replace";this.setAttribute("on","true");};focusGame();' on="false">Replace</button><button id="elemSelectButton" title="Select an element by name" class="controlButton" onclick='chooseElementPrompt();focusGame();'>E</button><button id="tpsButton" title="Change the simulation Ticks Per Second (TPS)" class="controlButton" onclick='var tpsprompt = prompt("Enter the new simulation Ticks Per Second (TPS). This is how many updates per second the simulation will run.\n\nThe default is 30.\n\nThe current TPS is " + tps + ".");var newtps = parseInt(tpsprompt);if (tpsprompt !== null) {if (isNaN(newtps) || newtps == "") {alert("You did not enter a valid TPS.");}else if (newtps > 1000) {alert("You entered a TPS that is too high. The TPS will be set to the maximum, 1000.");tps = 1000;}else {tps = parseInt(newtps);if (isNaN(tps) || tps <= 0) {alert("You did not enter a valid TPS.");tps = 30;}}resetInterval(tps);}focusGame();'>Tps</button><!--<button id="hideButton" title="Stops updating the scene to allow more resources towards simulation" class="controlButton" onclick='if (hiding) {hiding = false;this.setAttribute("on","false");}else {hiding = true;this.setAttribute("on","true");};focusGame();' on="false">Hide</button>--><button id="infoButton" title="Brings up the element info screen" class="controlButton" onclick='if (showingMenu!="info"){closeMenu();showInfo("")}else{closeMenu()};' on="false">Info</button><button id="savesButton" title="Brings up the Save & Load menu" class="controlButton" onclick='if (showingMenu!="saves"){closeMenu();showSaves()}else{closeMenu()};' on="false">Saves</button><button id="modsButton" title="Brings up the Mod Manager" class="controlButton" onclick='if (showingMenu!="mods"){closeMenu();showModManager()}else{closeMenu()};' on="false">Mods</button><button id="settingsButton" title="Brings up the settings screen" class="controlButton" onclick='if (showingMenu!="settings"){closeMenu();showSettings()}else{closeMenu()};' on="false">Settings</button>
+                    <button id="shiftButton" title="Toggle Shift key" class="controlButton" onclick='toggleShift();focusGame();' on="false" style="display:none">↑</button><button id="pauseButton" title="Pause/play the simulation" class="controlButton" onclick='togglePause();focusGame();' on="false">Pause</button><button id="frameButton" title="Pause and play one frame" class="controlButton" onclick='doFrame();focusGame();' on="false">&gt;</button><button id="sizeDownButton" title="Decrease the brush size" class="controlButton" onclick="mouseSize -= shiftDown?mouseSize-1:2;checkMouseSize(true);centerMouse();focusGame();">-</button><button id="sizeUpButton" title="Increase the brush size" class="controlButton" onclick="mouseSize += shiftDown?14:2;checkMouseSize(true);centerMouse();focusGame();">+</button><button id="resetButton" title="Clear the entire scene" class="controlButton" onclick="resetPrompt();focusGame();">Reset</button><button id="replaceButton" title="Override existing pixels when placing" class="controlButton" onclick='if (mode == "replace") {mode = null;this.setAttribute("on","false");}else {mode = "replace";this.setAttribute("on","true");};focusGame();' on="false">Replace</button><button id="elemSelectButton" title="Select an element by name" class="controlButton" onclick='chooseElementPrompt();focusGame();'>E</button><button id="tpsButton" title="Change the simulation Ticks Per Second (TPS)" class="controlButton" onclick='var tpsprompt = prompt("Enter the new simulation Ticks Per Second (TPS) between 1 and 1000. This is how many updates per second the simulation will run.\n\nThe default is 30.\n\nThe current TPS is " + tps + ".");var newtps = parseInt(tpsprompt);if (tpsprompt !== null) {if (isNaN(newtps) || newtps == "") {alert("You did not enter a valid TPS.");}else if (newtps > 1000) {alert("You entered a TPS that is too high. The TPS will be set to the maximum, 1000.");tps = 1000;}else {tps = parseInt(newtps);if (isNaN(tps) || tps <= 0) {alert("You did not enter a valid TPS.");tps = 30;}}resetInterval(tps);}focusGame();'>Tps</button><!--<button id="hideButton" title="Stops updating the scene to allow more resources towards simulation" class="controlButton" onclick='if (hiding) {hiding = false;this.setAttribute("on","false");}else {hiding = true;this.setAttribute("on","true");};focusGame();' on="false">Hide</button>--><button id="infoButton" title="Brings up the element info screen" class="controlButton" onclick='if (showingMenu!="info"){closeMenu();showInfo("")}else{closeMenu()};' on="false">Info</button><button id="savesButton" title="Brings up the Save & Load menu" class="controlButton" onclick='if (showingMenu!="saves"){closeMenu();showSaves()}else{closeMenu()};' on="false">Saves</button><button id="modsButton" title="Brings up the Mod Manager" class="controlButton" onclick='if (showingMenu!="mods"){closeMenu();showModManager()}else{closeMenu()};' on="false">Mods</button><button id="settingsButton" title="Brings up the settings screen" class="controlButton" onclick='if (showingMenu!="settings"){closeMenu();showSettings()}else{closeMenu()};' on="false">Settings</button>
                 </div>
                 <script>
                     // if it is the 1st of April, add a rainbow-colored button
@@ -17506,7 +18031,7 @@ Cancer, Landmine, Grenade, Smoke Grenade">?</span>
         <!-- <p>If you'd like to support us, consider donating on <a href="https://www.paypal.com/donate/?hosted_button_id=GCX4VHQ7SZWTN" target="_blank">PayPal</a> or <a href="https://cash.app/$emojiartist" target="_blank" title="$emojiartist">CashApp</a>, or subscribing on Discord.</p> -->
         <p>Business inquiries? Education stories? Help needed? Email us at <a href="mailto:contact@R74n.com?subject=%5BSandboxels%5D">contact@R74n.com</a>!</p>
         <p>More links: <a href="https://sandboxels.R74n.com/help" rel="help">Help</a> • <a href="https://sandboxels.R74n.com/tips">Tips</a> • <a href="https://sandboxels.R74n.com/mod-list">Mods</a> • <a href="https://sandboxels.R74n.com/mobile-use">Mobile</a> • <a href="https://sandboxels.R74n.com/offline-use">Offline</a> • <a href="https://R74n.com/privacy">Privacy</a></p>
-        <p>Thanks to our Patrons: Serioustar, ggod, Midi_png, personman, fnl4y, PitsPower, swagg boi, moss, WeiChei, Trent, u2ce</p>
+        <p>Thanks to our Patrons: Serioustar, ggod, Midi_png, personman, fnl4y, PitsPower, swagg boi, moss, Suss, WeiChei, Trent, u2ce</p>
         <p style="display:none" id="langCredit">Translation by R74n</p>
         <p>Sandboxels is developed by R74n. Check out <a href="https://R74n.com" rel="author" target="_blank">our other projects</a>!</p>
         <script>
