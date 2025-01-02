@@ -197,3 +197,19 @@ elements.knight_smoke = {
   stain: 0.075,
   noMix: true
 }
+
+
+elements.powdered_void = {
+  color: ["#262626", "#363636", "#464646", ],
+  behavior: [
+    ["XX","DL","XX"],
+    ["DL","XX","DL"],
+    ["M2","M1","M2"]
+  ],
+  ignore: ["void", "powdered_void"],
+
+  hardness: 1,
+  category: "special",
+}
+
+elements.void.breakInto = "powdered_void"
