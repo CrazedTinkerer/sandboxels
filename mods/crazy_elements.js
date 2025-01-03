@@ -240,6 +240,7 @@ elements.void.breakInto = "powdered_void"
 // Elements that negative space stuff can't move through
 const negspaceBlockers = [
   "negspace_powder",
+  "negspace_fluid",
 ]
 
 /**
@@ -290,5 +291,25 @@ elements.negspace_powder = {
   },
 
   density: 1603,
+  category: "special",
+}
+
+elements.negspace_fluid = {
+  color: "#ffb921",
+  tick: (pixel) => {
+    if (!tryRandomOrder(
+      () => {tryNegspaceMove(pixel, -1, 1)},
+      () => {tryNegspaceMove(pixel, 0, 1)},
+      () => {tryNegspaceMove(pixel, 1, 1)},
+    )){
+      tryRandomOrder(
+        () => {tryNegspaceMove(pixel, -1, 0)},
+        () => {tryNegspaceMove(pixel, 1, 0)},
+      )
+    }
+  },
+
+  density: 997,
+  state: "liquid",
   category: "special",
 }
