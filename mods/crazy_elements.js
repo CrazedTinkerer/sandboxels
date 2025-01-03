@@ -1,3 +1,5 @@
+// Utility Functions
+
 function emitFire(pixel, xOffset = 0, yOffset = 1, spawnElement = "fire", chance = 0.025){ // Taken from behaviors.MOLTEN and tweaked a bit
   const x = pixel.x + xOffset;
   const y = pixel.y + yOffset;
@@ -8,6 +10,23 @@ function emitFire(pixel, xOffset = 0, yOffset = 1, spawnElement = "fire", chance
         pixelMap[x][y].color = pixelColorPick(pixelMap[x][y],elements[pixel.element].fireColor);
     }
   }
+}
+
+/**
+ * Runs passed in functions in a random order
+ * until one of them returns true.
+ * @returns true if one of the input functions returns true, otherwise false
+ */
+function tryRandomOrder(...funcs){
+  shuffleArray(funcs);
+  for(let i = 0; i < funcs.length; i++){
+    const result = funcs[i]();
+    if (result) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 elements.hyper_sand = {
@@ -198,6 +217,7 @@ elements.knight_smoke = {
   noMix: true
 }
 
+// Weird Voids
 
 elements.powdered_void = {
   color: ["#262626", "#363636", "#464646", ],
@@ -213,3 +233,62 @@ elements.powdered_void = {
 }
 
 elements.void.breakInto = "powdered_void"
+
+
+// ##### Negative Space Stuff #####
+
+// Elements that negative space stuff can't move through
+const negspaceBlockers = [
+  "negspace_sand",
+]
+
+/**
+ * @returns true if a negspace element can move into the given space
+ */
+function canNegspaceMoveInto(x, y){
+  if (isEmpty(x, y) || outOfBounds(x, y)){
+    return false;
+  }
+
+  const element = pixelMap[x][y].element;
+  if (negspaceBlockers.includes(element)){
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Calculates x and y coordinates using 
+ * the pixels coordinates with xOffset and yOffset
+ * If canNegspaceMoveInto(x, y) === true,
+ * moves the pixel to (x, y) by swapping with
+ * the pixel there. 
+ * @returns a boolean which is true if the move was successful
+ */
+function tryNegspaceMove(pixel, xOffset, yOffset){
+  const x = pixel.x + xOffset;
+  const y = pixel.y + yOffset;
+  if (canNegspaceMoveInto(x, y)){
+    const targetPixel = pixelMap[x][y];
+    swapPixels(pixel, targetPixel);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+elements.negspace_sand = {
+  color: "#7586e6",
+  tick: (pixel) => {
+    if (!tryNegspaceMove(pixel, 0, 1)){
+      tryRandomOrder(
+        () => {tryNegspaceMove(pixel, -1, 1)},
+        () => {tryNegspaceMove(pixel, 1, 1)},
+      )
+    }
+  },
+
+  density: 1603,
+  category: "special",
+}
