@@ -29,7 +29,7 @@ function tryRandomOrder(...funcs){
   return false;
 }
 
-elements.hyper_sand = {
+elements.hyper_powder = {
   color: "#ef409c",
   behavior: [
     ["XX","XX","XX","XX","XX"],
@@ -43,7 +43,7 @@ elements.hyper_sand = {
   density: 1602,
 
   tempHigh: 1700,
-  stateHigh: "molten_hyper_sand",
+  stateHigh: "molten_hyper_powder",
 }
 
 elements.hyper_fluid = {
@@ -60,7 +60,7 @@ elements.hyper_fluid = {
   density: 997,
 }
 
-elements.molten_hyper_sand = {
+elements.molten_hyper_powder = {
   color: "#ef8340",
   behavior: elements.hyper_fluid.behavior,
   tick: (pixel) => {
@@ -72,7 +72,7 @@ elements.molten_hyper_sand = {
   density: 1520,
 
   tempLow: 1700,
-  stateLow: "hyper_sand",
+  stateLow: "hyper_powder",
 }
 
 elements.hyper_fire = {
@@ -123,7 +123,7 @@ elements.hyper_smoke = {
   noMix: true
 }
 
-elements.knight_sand = {
+elements.knight_powder = {
   color: "#bf439e",
   behavior: [
     ["XX","XX","XX","XX","XX"],
@@ -137,7 +137,7 @@ elements.knight_sand = {
   density: 1602,
 
   tempHigh: 1700,
-  stateHigh: "molten_knight_sand"
+  stateHigh: "molten_knight_powder"
 }
 
 elements.knight_fluid = {
@@ -154,7 +154,7 @@ elements.knight_fluid = {
   density: 997,
 }
 
-elements.molten_knight_sand = {
+elements.molten_knight_powder = {
   color: "#bf7943",
   behavior: elements.knight_fluid.behavior,
   tick: (pixel) => {
@@ -166,7 +166,7 @@ elements.molten_knight_sand = {
   density: 1520,
 
   tempLow: 1700,
-  stateLow: "knight_sand",
+  stateLow: "knight_powder",
 }
 
 elements.knight_fire = {
@@ -239,7 +239,7 @@ elements.void.breakInto = "powdered_void"
 
 // Elements that negative space stuff can't move through
 const negspaceBlockers = [
-  "negspace_sand",
+  "negspace_powder",
 ]
 
 /**
@@ -278,7 +278,7 @@ function tryNegspaceMove(pixel, xOffset, yOffset){
   }
 }
 
-elements.negspace_sand = {
+elements.negspace_powder = {
   color: "#7586e6",
   tick: (pixel) => {
     if (!tryNegspaceMove(pixel, 0, 1)){
