@@ -310,6 +310,5 @@ elements.negspace_fluid = {
   },
 
   density: 997,
-  state: "liquid",
   category: "special",
 }
