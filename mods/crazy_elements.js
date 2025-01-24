@@ -284,8 +284,8 @@ elements.negspace_powder = {
   tick: (pixel) => {
     if (!tryNegspaceMove(pixel, 0, 1)){
       tryRandomOrder(
-        () => {tryNegspaceMove(pixel, -1, 1)},
-        () => {tryNegspaceMove(pixel, 1, 1)},
+        () => {return tryNegspaceMove(pixel, -1, 1)},
+        () => {return tryNegspaceMove(pixel, 1, 1)},
       )
     }
   },
@@ -298,17 +298,30 @@ elements.negspace_fluid = {
   color: "#ffb921",
   tick: (pixel) => {
     if (!tryRandomOrder(
-      () => {tryNegspaceMove(pixel, -1, 1)},
-      () => {tryNegspaceMove(pixel, 0, 1)},
-      () => {tryNegspaceMove(pixel, 1, 1)},
+      () => {return tryNegspaceMove(pixel, -1, 1)},
+      () => {return tryNegspaceMove(pixel, 0, 1)},
+      () => {return tryNegspaceMove(pixel, 1, 1)},
     )){
       tryRandomOrder(
-        () => {tryNegspaceMove(pixel, -1, 0)},
-        () => {tryNegspaceMove(pixel, 1, 0)},
+        () => {return tryNegspaceMove(pixel, -1, 0)},
+        () => {return tryNegspaceMove(pixel, 1, 0)},
       )
     }
   },
 
   density: 997,
   category: "special",
+}
+
+elements.negspace_steam = {
+  color: "#ffde96",
+  tick: (pixel) => {
+    if (!tryRandomOrder(
+      () => {tryNegspac}
+    )){
+      tryRandomOrder(
+
+      )
+    }
+  }
 }
