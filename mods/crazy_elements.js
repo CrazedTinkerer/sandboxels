@@ -241,6 +241,7 @@ elements.void.breakInto = "powdered_void"
 const negspaceBlockers = [
   "negspace_powder",
   "negspace_fluid",
+  "negspace_steam",
 ]
 
 /**
@@ -309,6 +310,8 @@ elements.negspace_fluid = {
     }
   },
 
+  tempHigh: 100,
+  stateHigh: "negspace_steam",
   density: 997,
   category: "special",
 }
@@ -317,11 +320,29 @@ elements.negspace_steam = {
   color: "#ffde96",
   tick: (pixel) => {
     if (!tryRandomOrder(
-      () => {tryNegspac}
+      () => {return tryNegspaceMove(pixel, -1, 0)},
+      () => {return tryNegspaceMove(pixel, 1, 0)},
+      () => {return tryNegspaceMove(pixel, 0, -1)},
+      // () => {return tryNegspaceMove(pixel, 0, 1)},
     )){
       tryRandomOrder(
-
+        () => {return tryNegspaceMove(pixel, -1, -1)},
+        () => {return tryNegspaceMove(pixel, -1, 1)},
+        () => {return tryNegspaceMove(pixel, 1, -1)},
+        () => {return tryNegspaceMove(pixel, 1, 1)},
       )
     }
-  }
+
+    // Air Density (The reason steam floats up)
+    const pixelDensity = pixel.element.density;
+    if (Math.random() < (airDensity - pixelDensity)/(airDensity + pixelDensity)) {
+      tryNegspaceMove(pixel, 0, -1);
+    }
+  },
+
+  temp: 150,
+  tempLow: 95,
+  stateLow: "negspace_fluid",
+  category: "special",
+  density: 0.6,
 }
