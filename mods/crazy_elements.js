@@ -17,6 +17,36 @@ const getRgbArrayFromString = function(rgbString){
   ]
 }
 
+const rgbToHsl = ([r, g, b]) => {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const l = Math.max(r, g, b);
+  const s = l - Math.min(r, g, b);
+  const h = s
+    ? l === r
+      ? (g - b) / s
+      : l === g
+      ? 2 + (b - r) / s
+      : 4 + (r - g) / s
+    : 0;
+  return [
+    60 * h < 0 ? 60 * h + 360 : 60 * h,
+    100 * (s ? (l <= 0.5 ? s / (2 * l - s) : s / (2 - (2 * l - s))) : 0),
+    (100 * (2 * l - s)) / 2,
+  ];
+};
+
+const hslToRgb = ([h, s, l]) => {
+  s /= 100;
+  l /= 100;
+  const k = n => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n =>
+    l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return [255 * f(0), 255 * f(8), 255 * f(4)];
+};
+
 // End of Color Functions
 
 const emitFire = function(pixel, xOffset = 0, yOffset = 1, spawnElement = "fire", chance = 0.025){ // Taken from behaviors.MOLTEN and tweaked a bit
@@ -46,6 +76,14 @@ const tryRandomOrder = function(...funcs){
   }
 
   return false;
+}
+
+const getPixelOrNull = function(x, y){
+  if (isEmpty(x, y, true)){
+    return null;
+  } else {
+    return pixelMap[x][y];
+  }
 }
 
 elements.hyper_powder = {
@@ -297,14 +335,21 @@ elements.liquid_rainbow = {
   ],
 
   onPlace: function(pixel){
-    pixel.color = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`
-    const rgbArray = getRgbArrayFromString(pixel.color);
-    console.log(rgbArray, RGBToHSL(rgbArray), HSLtoRGB(RGBToHSL(rgbArray)))
+    const [r, g, b] = hslToRgb([Math.random() * 360, 100, 50]);
+    pixel.color = `rgb(${r}, ${g}, ${b})`;
   },
 
   tick: function(pixel){
     const rgbArray = getRgbArrayFromString(pixel.color);
-    
+    const hslArray = rgbToHsl(rgbArray);
+    const otherPixel = getPixelOrNull(pixel.x + 1, pixel.y);
+
+    if (otherPixel && otherPixel.element === pixel.element){
+      const otherPixelHslArray = rgbToHsl(getRgbArrayFromString(otherPixel.color));
+      if (otherPixelHslArray[0] > hslArray[0]){
+        swapPixels(pixel, otherPixel);
+      }
+    }
   },
 
   state: "liquid",
