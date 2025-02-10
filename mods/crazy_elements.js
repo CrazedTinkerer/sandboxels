@@ -241,6 +241,7 @@ elements.void.breakInto = "powdered_void"
 const negspaceBlockers = [
   "negspace_powder",
   "negspace_fluid",
+  "negspace_steam",
 ]
 
 /**
@@ -284,8 +285,8 @@ elements.negspace_powder = {
   tick: (pixel) => {
     if (!tryNegspaceMove(pixel, 0, 1)){
       tryRandomOrder(
-        () => {tryNegspaceMove(pixel, -1, 1)},
-        () => {tryNegspaceMove(pixel, 1, 1)},
+        () => {return tryNegspaceMove(pixel, -1, 1)},
+        () => {return tryNegspaceMove(pixel, 1, 1)},
       )
     }
   },
@@ -298,18 +299,50 @@ elements.negspace_fluid = {
   color: "#ffb921",
   tick: (pixel) => {
     if (!tryRandomOrder(
-      () => {tryNegspaceMove(pixel, -1, 1)},
-      () => {tryNegspaceMove(pixel, 0, 1)},
-      () => {tryNegspaceMove(pixel, 1, 1)},
+      () => {return tryNegspaceMove(pixel, -1, 1)},
+      () => {return tryNegspaceMove(pixel, 0, 1)},
+      () => {return tryNegspaceMove(pixel, 1, 1)},
     )){
       tryRandomOrder(
-        () => {tryNegspaceMove(pixel, -1, 0)},
-        () => {tryNegspaceMove(pixel, 1, 0)},
+        () => {return tryNegspaceMove(pixel, -1, 0)},
+        () => {return tryNegspaceMove(pixel, 1, 0)},
       )
     }
   },
 
+  tempHigh: 100,
+  stateHigh: "negspace_steam",
   density: 997,
-  state: "liquid",
   category: "special",
+}
+
+elements.negspace_steam = {
+  color: "#ffde96",
+  tick: (pixel) => {
+    if (!tryRandomOrder(
+      () => {return tryNegspaceMove(pixel, -1, 0)},
+      () => {return tryNegspaceMove(pixel, 1, 0)},
+      () => {return tryNegspaceMove(pixel, 0, -1)},
+      // () => {return tryNegspaceMove(pixel, 0, 1)},
+    )){
+      tryRandomOrder(
+        () => {return tryNegspaceMove(pixel, -1, -1)},
+        () => {return tryNegspaceMove(pixel, -1, 1)},
+        () => {return tryNegspaceMove(pixel, 1, -1)},
+        () => {return tryNegspaceMove(pixel, 1, 1)},
+      )
+    }
+
+    // Air Density (The reason steam floats up)
+    const pixelDensity = pixel.element.density;
+    if (Math.random() < (airDensity - pixelDensity)/(airDensity + pixelDensity)) {
+      tryNegspaceMove(pixel, 0, -1);
+    }
+  },
+
+  temp: 150,
+  tempLow: 95,
+  stateLow: "negspace_fluid",
+  category: "special",
+  density: 0.6,
 }
