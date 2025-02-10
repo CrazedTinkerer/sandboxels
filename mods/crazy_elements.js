@@ -247,7 +247,7 @@ const negspaceBlockers = [
 /**
  * @returns true if a negspace element can move into the given space
  */
-function canNegspaceMoveInto(x, y){
+const canNegspaceMoveInto = function(x, y){
   if (isEmpty(x, y) || outOfBounds(x, y)){
     return false;
   }
@@ -268,7 +268,7 @@ function canNegspaceMoveInto(x, y){
  * the pixel there. 
  * @returns a boolean which is true if the move was successful
  */
-function tryNegspaceMove(pixel, xOffset, yOffset){
+const tryNegspaceMove = function(pixel, xOffset, yOffset){
   const x = pixel.x + xOffset;
   const y = pixel.y + yOffset;
   if (canNegspaceMoveInto(x, y)){
