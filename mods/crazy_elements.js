@@ -58,6 +58,27 @@ elements.hyper_fluid = {
   category: "special",
   state: "liquid",
   density: 997,
+
+  tempHigh: 100,
+  stateHigh: "hyper_steam",
+}
+
+elements.hyper_steam = {
+  color: "#de9cff",
+  behavior: [
+    ["M2","XX","M1","XX","M2"],
+    ["XX","XX","XX","XX","XX"],
+    ["M1","XX","XX","XX","M1"],
+    ["XX","XX","XX","XX","XX"],
+    ["M2","XX","M1","XX","M2"],
+  ],
+
+  temp: 150,
+  tempLow: 95,
+  stateLow: "hyper_fluid",
+  category: "gases",
+  state: "gas",
+  density: 0.6,
 }
 
 elements.molten_hyper_powder = {
@@ -152,6 +173,27 @@ elements.knight_fluid = {
   category: "special",
   state: "liquid",
   density: 997,
+
+  tempHigh: 100,
+  stateHigh: "knight_steam",
+}
+
+elements.knight_steam = {
+  color: "#a893f5",
+  behavior: [
+    ["XX","M1","XX","M1","XX"],
+    ["M1","XX","XX","XX","M1"],
+    ["XX","XX","XX","XX","XX"],
+    ["M1","XX","XX","XX","M1"],
+    ["XX","M1","XX","M1","XX"],
+  ],
+
+  temp: 150,
+  tempLow: 95,
+  stateLow: "knight_fluid",
+  category: "gases",
+  state: "gas",
+  density: 0.6,
 }
 
 elements.molten_knight_powder = {
