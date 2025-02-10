@@ -289,6 +289,8 @@ elements.negspace_powder = {
         () => {return tryNegspaceMove(pixel, 1, 1)},
       )
     }
+
+    doHeat(pixel);
   },
 
   density: 1603,
@@ -308,6 +310,8 @@ elements.negspace_fluid = {
         () => {return tryNegspaceMove(pixel, 1, 0)},
       )
     }
+
+    doHeat(pixel);
   },
 
   tempHigh: 100,
@@ -318,6 +322,7 @@ elements.negspace_fluid = {
 
 elements.negspace_steam = {
   color: "#ffde96",
+  glow: true, // Enable the gas rendering effect
   tick: (pixel) => {
     if (!tryRandomOrder(
       () => {return tryNegspaceMove(pixel, -1, 0)},
@@ -338,6 +343,8 @@ elements.negspace_steam = {
     if (Math.random() < (airDensity - pixelDensity)/(airDensity + pixelDensity)) {
       tryNegspaceMove(pixel, 0, -1);
     }
+
+    doHeat(pixel); // Make heat propagation work consistently (without this, it looks like it works in some cases but not always)
   },
 
   temp: 150,
