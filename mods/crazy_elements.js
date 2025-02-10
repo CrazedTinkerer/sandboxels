@@ -1,5 +1,24 @@
 // Utility Functions
 
+//  Color Functions
+
+/**
+ * @param {string} rgbString A string in the form 'rgb(r,g,b)'
+ */
+const getRgbArrayFromString = function(rgbString){
+  rgbStringParts = rgbString
+    .slice(4, rgbString.length-1) // Remove the 'rgb(' and ')'
+    .split(',');
+
+  return [
+    parseInt(rgbStringParts[0]),
+    parseInt(rgbStringParts[1]),
+    parseInt(rgbStringParts[2]),
+  ]
+}
+
+// End of Color Functions
+
 const emitFire = function(pixel, xOffset = 0, yOffset = 1, spawnElement = "fire", chance = 0.025){ // Taken from behaviors.MOLTEN and tweaked a bit
   const x = pixel.x + xOffset;
   const y = pixel.y + yOffset;
@@ -257,6 +276,42 @@ elements.knight_smoke = {
   density: 1180,
   stain: 0.075,
   noMix: true
+}
+
+
+elements.liquid_rainbow = {
+  color: [
+    "#ff0000",
+    "#ff8000",
+    "#ffff00",
+    "#80ff00",
+    "#00ff00",
+    "#00ff80",
+    "#00ffff",
+    "#0080ff",
+    "#0000ff",
+    "#8000ff",
+    "#ff00ff",
+    "#ff0080",
+    "#ff0000",
+  ],
+
+  onPlace: function(pixel){
+    pixel.color = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`
+    const rgbArray = getRgbArrayFromString(pixel.color);
+    console.log(rgbArray, RGBToHSL(rgbArray), HSLtoRGB(RGBToHSL(rgbArray)))
+  },
+
+  tick: function(pixel){
+    const rgbArray = getRgbArrayFromString(pixel.color);
+    
+  },
+
+  state: "liquid",
+  behavior: behaviors.LIQUID,
+  category: "liquids",
+  density: 497,
+  stain: 0.08,
 }
 
 // Weird Voids
