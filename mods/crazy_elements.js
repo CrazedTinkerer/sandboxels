@@ -1,6 +1,6 @@
 // Utility Functions
 
-function emitFire(pixel, xOffset = 0, yOffset = 1, spawnElement = "fire", chance = 0.025){ // Taken from behaviors.MOLTEN and tweaked a bit
+const emitFire = function(pixel, xOffset = 0, yOffset = 1, spawnElement = "fire", chance = 0.025){ // Taken from behaviors.MOLTEN and tweaked a bit
   const x = pixel.x + xOffset;
   const y = pixel.y + yOffset;
   if (Math.random() < chance && isEmpty(x, y)) {
@@ -17,7 +17,7 @@ function emitFire(pixel, xOffset = 0, yOffset = 1, spawnElement = "fire", chance
  * until one of them returns true.
  * @returns true if one of the input functions returns true, otherwise false
  */
-function tryRandomOrder(...funcs){
+const tryRandomOrder = function(...funcs){
   shuffleArray(funcs);
   for(let i = 0; i < funcs.length; i++){
     const result = funcs[i]();
