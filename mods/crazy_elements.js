@@ -17,6 +17,10 @@ const getRgbArrayFromString = function(rgbString){
   ]
 }
 
+const hslArrayFromPixel = function(pixel){
+  return rgbToHsl(getRgbArrayFromString(pixel.color));
+}
+
 // Found these at https://www.30secondsofcode.org/js/s/rgb-hex-hsl-hsb-color-format-conversion/
 const rgbToHsl = ([r, g, b]) => {
   r /= 255;
@@ -317,6 +321,33 @@ elements.knight_smoke = {
 }
 
 
+/**
+ * @param {Array<Pixel>} pixels
+ */
+const rainbowSort = function(pixels){
+  if (hslArrayFromPixel(pixels[0])[0] < hslArrayFromPixel(pixels[1])[0] &&
+      hslArrayFromPixel(pixels[1])[0] > hslArrayFromPixel(pixels[2])[0]){
+        swapPixels(pixels[1], pixels[2]);
+  } else 
+  if (hslArrayFromPixel(pixels[0])[0] > hslArrayFromPixel(pixels[1])[0] &&
+      hslArrayFromPixel(pixels[1])[0] < hslArrayFromPixel(pixels[2])[0]){
+        swapPixels(pixels[0], pixels[1]); 
+}
+}
+
+const wrapDifference = function(from, to, wrapPoint){
+  const difference = to - from;
+  const halfWrapPoint = wrapPoint / 2;
+
+  if (difference > halfWrapPoint){
+    difference -= wrapPoint;
+  } else if (difference < -halfWrapPoint){
+    difference += wrapPoint;
+  }
+
+  return difference;
+}
+
 elements.liquid_rainbow = {
   color: [
     "#ff0000",
@@ -344,11 +375,43 @@ elements.liquid_rainbow = {
     const hslArray = rgbToHsl(rgbArray);
     const otherPixel = getPixelOrNull(pixel.x + 1, pixel.y);
 
-    if (otherPixel && otherPixel.element === pixel.element){
-      const otherPixelHslArray = rgbToHsl(getRgbArrayFromString(otherPixel.color));
-      if (otherPixelHslArray[0] > hslArray[0]){
-        swapPixels(pixel, otherPixel);
+    // if (otherPixel && otherPixel.element === pixel.element){
+    //   const otherPixelHslArray = rgbToHsl(getRgbArrayFromString(otherPixel.color));
+    //   if (otherPixelHslArray[0] > hslArray[0]){
+    //     swapPixels(pixel, otherPixel);
+    //   }
+    // }
+
+    let horizontalPixels = [];
+    let verticalPixels = [];
+
+    for (let x = -1; x <= 1; x++){
+      const checkedPixel = getPixelOrNull(pixel.x + x, pixel.y);
+      if (checkedPixel?.element === pixel.element){
+        horizontalPixels.push(checkedPixel);
+      } else {
+        horizontalPixels = null;
+        break;
       }
+    }
+
+    for (let y = -1; y <= 1; y++){
+      const checkedPixel = getPixelOrNull(pixel.x, pixel.y + y);
+      if (checkedPixel?.element === pixel.element){
+        verticalPixels.push(checkedPixel);
+      } else {
+        verticalPixels = null;
+        break;
+      }
+    }
+
+    if (horizontalPixels){
+      rainbowSort(horizontalPixels);
+      rainbowSort(horizontalPixels.reverse());
+    }
+    if (verticalPixels){
+      rainbowSort(verticalPixels);
+      rainbowSort(verticalPixels.reverse());
     }
   },
 
