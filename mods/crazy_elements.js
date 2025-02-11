@@ -17,6 +17,7 @@ const getRgbArrayFromString = function(rgbString){
   ]
 }
 
+// Found these at https://www.30secondsofcode.org/js/s/rgb-hex-hsl-hsb-color-format-conversion/
 const rgbToHsl = ([r, g, b]) => {
   r /= 255;
   g /= 255;
@@ -36,7 +37,6 @@ const rgbToHsl = ([r, g, b]) => {
     (100 * (2 * l - s)) / 2,
   ];
 };
-
 const hslToRgb = ([h, s, l]) => {
   s /= 100;
   l /= 100;
