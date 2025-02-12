@@ -332,7 +332,7 @@ const rainbowSort = function(pixels){
   if (hslArrayFromPixel(pixels[0])[0] > hslArrayFromPixel(pixels[1])[0] &&
       hslArrayFromPixel(pixels[1])[0] < hslArrayFromPixel(pixels[2])[0]){
         swapPixels(pixels[0], pixels[1]); 
-}
+  }
 }
 
 const wrapDifference = function(from, to, wrapPoint){
