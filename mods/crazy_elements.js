@@ -335,6 +335,29 @@ const rainbowSort = function(pixels){
   }
 }
 
+/**
+ * Takes an array of three numbers and returns an array of either 2 or 0 numbers,
+ * representing indices that must be swapped to put the array in either increasing or decreasing order
+ */
+const checkSort = function([a, b, c]){
+  if (a > b && b < c){
+    if (a > c){
+      return [1,2]
+    } else {
+      return [0,1]
+    }
+  }
+  if (a < b && b > c){
+    if (a > c){
+      return [0,1]
+    } else {
+      return [1,2]
+    }
+  }
+
+  return [];
+}
+
 const wrapDifference = function(from, to, wrapPoint){
   const difference = to - from;
   const halfWrapPoint = wrapPoint / 2;
