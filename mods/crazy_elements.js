@@ -335,6 +335,7 @@ const rainbowSort = function(pixels){
       return 0;
     }
 
+    // TODO: Make another version that doesn't wrap around here
     let score = wrapDifference(hslArrayFromPixel(pixel)[0], hslArrayFromPixel(mainPixel)[0], 360);
     return score;
   });
@@ -460,6 +461,11 @@ elements.liquid_rainbow = {
   density: 497,
   stain: 0.08,
 }
+
+// Add some reactions to make liquid rainbow
+// The temperature has to be high because the liquid light makes it way colder
+elements.liquid_light.reactions["water"] = {elem1: "liquid_rainbow", elem2: "liquid_rainbow", temp1: 150, temp2: 150};
+elements.liquid_light.reactions["salt_water"] = {elem1: "liquid_rainbow", elem2: ["liquid_rainbow", "salt"], temp1: 150, temp2: 150};
 
 // Weird Voids
 
