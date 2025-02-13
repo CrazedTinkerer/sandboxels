@@ -325,21 +325,44 @@ elements.knight_smoke = {
  * @param {Array<Pixel>} pixels
  */
 const rainbowSort = function(pixels){
-  if (hslArrayFromPixel(pixels[0])[0] < hslArrayFromPixel(pixels[1])[0] &&
-      hslArrayFromPixel(pixels[1])[0] > hslArrayFromPixel(pixels[2])[0]){
-        swapPixels(pixels[1], pixels[2]);
-  } else 
-  if (hslArrayFromPixel(pixels[0])[0] > hslArrayFromPixel(pixels[1])[0] &&
-      hslArrayFromPixel(pixels[1])[0] < hslArrayFromPixel(pixels[2])[0]){
-        swapPixels(pixels[0], pixels[1]); 
+  const mainPixel = pixels[1]; // The pixel all the others are compared against
+  const swapScores = pixels.map((pixel) => {
+    if (mainPixel.stuck){ // Choose a random order if the pixel is stuck in a loop
+      mainPixel.stuck = false;
+      return Math.random();
+    }
+    if (pixel === mainPixel){
+      return 0;
+    }
+
+    let score = wrapDifference(hslArrayFromPixel(pixel)[0], hslArrayFromPixel(mainPixel)[0], 360);
+    return score;
+  });
+
+  const swapIndices = checkSwapIndices(swapScores);
+
+  if (swapIndices.length === 2){
+    const pixel1 = pixels[swapIndices[0]];
+    const pixel2 = pixels[swapIndices[1]];
+
+    // Check if the pixel is stuck in a loop of swapping between the same two spots repeatedly
+    if (pixel1.lastSwappedPixel != pixel2 && pixel2.lastSwappedPixel != pixel1){
+      swapPixels(pixel1, pixel2);
+      pixel1.lastSwappedPixel = pixel2;
+      pixel2.lastSwappedPixel = pixel1;
+    } else {
+      mainPixel.stuck = true;
+    };
+    
   }
+
 }
 
 /**
  * Takes an array of three numbers and returns an array of either 2 or 0 numbers,
  * representing indices that must be swapped to put the array in either increasing or decreasing order
  */
-const checkSort = function([a, b, c]){
+const checkSwapIndices = function([a, b, c]){
   if (a > b && b < c){
     if (a > c){
       return [1,2]
@@ -359,7 +382,7 @@ const checkSort = function([a, b, c]){
 }
 
 const wrapDifference = function(from, to, wrapPoint){
-  const difference = to - from;
+  let difference = to - from;
   const halfWrapPoint = wrapPoint / 2;
 
   if (difference > halfWrapPoint){
@@ -394,17 +417,6 @@ elements.liquid_rainbow = {
   },
 
   tick: function(pixel){
-    const rgbArray = getRgbArrayFromString(pixel.color);
-    const hslArray = rgbToHsl(rgbArray);
-    const otherPixel = getPixelOrNull(pixel.x + 1, pixel.y);
-
-    // if (otherPixel && otherPixel.element === pixel.element){
-    //   const otherPixelHslArray = rgbToHsl(getRgbArrayFromString(otherPixel.color));
-    //   if (otherPixelHslArray[0] > hslArray[0]){
-    //     swapPixels(pixel, otherPixel);
-    //   }
-    // }
-
     let horizontalPixels = [];
     let verticalPixels = [];
 
@@ -428,14 +440,18 @@ elements.liquid_rainbow = {
       }
     }
 
-    if (horizontalPixels){
-      rainbowSort(horizontalPixels);
-      rainbowSort(horizontalPixels.reverse());
-    }
-    if (verticalPixels){
-      rainbowSort(verticalPixels);
-      rainbowSort(verticalPixels.reverse());
-    }
+    tryRandomOrder(
+      () => {
+        if (horizontalPixels){
+          rainbowSort(horizontalPixels);
+        }
+      },
+      () => {
+        if (verticalPixels){
+          rainbowSort(verticalPixels);
+        }
+      }
+    )
   },
 
   state: "liquid",
