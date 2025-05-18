@@ -1,5 +1,74 @@
 // Utility Functions
 
+const random = function(min, max){
+    return min + (Math.random() * (max - min));
+}
+
+/**
+ * Returns a random float between 0 and `range`, not including `range`.
+ * Generates multiple numbers based on `rerolls` and chooses the one closest to `target`.
+ * @param {object} params
+ * @param {number} params.range
+ * @param {number} params.target
+ * @param {number} params.rerolls
+ */
+const biasedRandom = function({range, target, rerolls}){
+  const numbers = [];
+  for (let i = 0; i < rerolls; i++){
+    numbers.push(Math.random() * range);
+  }
+  
+  let result = numbers[0];
+  for (let i = 1; i < numbers.length; i++){ // Intentionally skips the first number in the array, because result is initialized to that number already
+    const oldDifference = Math.abs(target - result);
+    const newDifference = Math.abs(target - numbers[i]);
+    if (newDifference < oldDifference){
+      result = numbers[i];
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Returns a random float between 0 and `range`, not including `range`.
+ * Generates multiple numbers based on `rerolls` and chooses the one closest to `target`, wrapping around between 0 and `range`.
+ * @param {object} params
+ * @param {number} params.range
+ * @param {number} params.target
+ * @param {number} params.rerolls
+ */
+const biasedWrapAroundRandom = function({range, target, rerolls}){
+  const numbers = [];
+  for (let i = 0; i < rerolls; i++){
+    numbers.push(Math.random() * range);
+  }
+  
+  let result = numbers[0];
+  for (let i = 1; i < numbers.length; i++){ // Intentionally skips the first number in the array, because result is initialized to that number already
+    const oldDifference = Math.abs(wrapDifference(target, result, range));
+    const newDifference = Math.abs(wrapDifference(target, numbers[i], range));
+    if (newDifference < oldDifference){
+      result = numbers[i];
+    }
+  }
+
+  return result;
+}
+
+const wrapDifference = function(from, to, wrapPoint){
+  let difference = to - from;
+  const halfWrapPoint = wrapPoint / 2;
+
+  if (difference > halfWrapPoint){
+    difference -= wrapPoint;
+  } else if (difference < -halfWrapPoint){
+    difference += wrapPoint;
+  }
+
+  return difference;
+}
+
 //  Color Functions
 
 /**
@@ -19,6 +88,11 @@ const getRgbArrayFromString = function(rgbString){
 
 const hslArrayFromPixel = function(pixel){
   return rgbToHsl(getRgbArrayFromString(pixel.color));
+}
+
+const hslToRgbString = function([h, s, l]){
+  const [r, g, b] = hslToRgb([h, s, l]);
+  return `rgb(${r}, ${g}, ${b})`;
 }
 
 // Found these at https://www.30secondsofcode.org/js/s/rgb-hex-hsl-hsb-color-format-conversion/
@@ -382,19 +456,6 @@ const checkSwapIndices = function([a, b, c]){
   return [];
 }
 
-const wrapDifference = function(from, to, wrapPoint){
-  let difference = to - from;
-  const halfWrapPoint = wrapPoint / 2;
-
-  if (difference > halfWrapPoint){
-    difference -= wrapPoint;
-  } else if (difference < -halfWrapPoint){
-    difference += wrapPoint;
-  }
-
-  return difference;
-}
-
 elements.liquid_rainbow = {
   color: [
     "#ff0000",
@@ -413,8 +474,7 @@ elements.liquid_rainbow = {
   ],
 
   onPlace: function(pixel){
-    const [r, g, b] = hslToRgb([Math.random() * 360, 100, 50]);
-    pixel.color = `rgb(${r}, ${g}, ${b})`;
+    pixel.color = hslToRgbString([Math.random() * 360, 100, 50]);
   },
 
   tick: function(pixel){
@@ -466,6 +526,46 @@ elements.liquid_rainbow = {
 // The temperature has to be high because the liquid light makes it way colder
 elements.liquid_light.reactions["water"] = {elem1: "liquid_rainbow", elem2: "liquid_rainbow", temp1: 150, temp2: 150};
 elements.liquid_light.reactions["salt_water"] = {elem1: "liquid_rainbow", elem2: ["liquid_rainbow", "salt"], temp1: 150, temp2: 150};
+elements.liquid_light.reactions["sugar_water"] = {elem1: "liquid_rainbow", elem2: ["liquid_rainbow", "sugar"], temp1: 150, temp2: 150};
+elements.liquid_light.reactions["pool_water"] = {elem1: "liquid_rainbow", elem2: ["liquid_rainbow", "liquid_rainbow", "liquid_rainbow", "chlorine"], temp1: 150, temp2: 150};
+elements.liquid_light.reactions["seltzer"] = {elem1: "liquid_rainbow", elem2: ["liquid_rainbow", "foam"], temp1: 150, temp2: 150};
+
+elements.liquid_light.reactions["milk"] = {elem1: "liquid_rainbow", elem2: "liquid_rainbow", temp1: 150, temp2: 150,
+  func: (pixel1, pixel2) => {
+    pixel1.color = hslToRgbString([Math.random() * 360, 100, 80]);
+    pixel2.color = hslToRgbString([Math.random() * 360, 100, 80]);
+  }
+};
+elements.liquid_light.reactions["soap"] = {elem1: "liquid_rainbow", elem2: ["liquid_rainbow", "soap", "bubble"], temp1: 150, temp2: 150,
+  func: (pixel1, pixel2) => {
+    pixel1.color = hslToRgbString([Math.random() * 360, 40, 90]);
+    pixel2.color = hslToRgbString([Math.random() * 360, 40, 90]);
+  }
+};
+elements.liquid_light.reactions["cream"] = {elem1: "liquid_rainbow", elem2: "liquid_rainbow", temp1: 150, temp2: 150,
+  func: (pixel1, pixel2) => {
+    pixel1.color = hslToRgbString([Math.random() * 360, 75, 80]);
+    pixel2.color = hslToRgbString([Math.random() * 360, 75, 80]);
+  }
+};
+elements.liquid_light.reactions["ink"] = {elem1: "liquid_rainbow", elem2: "liquid_rainbow", temp1: 150, temp2: 150,
+  func: (pixel1, pixel2) => {
+    pixel1.color = hslToRgbString([Math.random() * 360, 100, 20]);
+    pixel2.color = hslToRgbString([Math.random() * 360, 100, 20]);
+  }
+};
+elements.liquid_light.reactions["blood"] = {elem1: "liquid_rainbow", elem2: "liquid_rainbow", temp1: 150, temp2: 150,
+  func: (pixel1, pixel2) => {
+    pixel1.color = hslToRgbString([biasedWrapAroundRandom({range: 360, target: 0, rerolls: 4}), 100, 50]);
+    pixel2.color = hslToRgbString([biasedWrapAroundRandom({range: 360, target: 0, rerolls: 4}), 100, 50]);
+  }
+};
+elements.liquid_light.reactions["dirty_water"] = {elem1: "liquid_rainbow", elem2: "liquid_rainbow", temp1: 150, temp2: 150,
+  func: (pixel1, pixel2) => {
+    pixel1.color = hslToRgbString([Math.random() * 360, random(81, 100), random(28, 50)]);
+    pixel2.color = hslToRgbString([Math.random() * 360, random(81, 100), random(28, 50)]);
+  }
+};
 
 // Weird Voids
 
