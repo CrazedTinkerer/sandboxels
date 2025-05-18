@@ -173,3 +173,5 @@ if (elements.border) {elements.border.tick = function(pixel){
     var r = Math.floor(127*Math.sin(t/1.5));
     pixel.color = "rgba("+r+","+r*2+","+r*2+","+r/127+")";
 };}
+if (elements.pipe_wall) {elements.pipe_wall.color = "#808080";}
+if (elements.molten_rad_glass) {delete elements.molten_rad_glass.color;}
