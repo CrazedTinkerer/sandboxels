@@ -515,6 +515,10 @@ elements.liquid_rainbow = {
     )
   },
 
+  reactions: {
+    glue: {elem1: "congealing_liquid_rainbow", elem2: null},
+  },
+
   state: "liquid",
   behavior: behaviors.LIQUID,
   category: "liquids",
@@ -566,6 +570,59 @@ elements.liquid_light.reactions["dirty_water"] = {elem1: "liquid_rainbow", elem2
     pixel2.color = hslToRgbString([Math.random() * 360, random(81, 100), random(28, 50)]);
   }
 };
+
+
+elements.congealing_liquid_rainbow = {
+  tick: function(pixel){
+    pixel.life ??= 50;
+    pixel.glueCount ??= 0;
+    if (pixel.glueCount > 0){
+      for (coords of squareCoords){
+        const otherPixel = getPixelOrNull(pixel.x + coords[0], pixel.y + coords[1]);
+        if (otherPixel?.element == "liquid_rainbow"){
+          otherPixel.element = pixel.element;
+          pixel.glueCount--;
+        } else if (otherPixel?.element == "congealed_liquid_rainbow"){
+          if (otherPixel.glueCount < pixel.glueCount){
+            otherPixel.glueCount++;
+            pixel.glueCount--;
+          }
+        }
+      }
+    }
+
+    pixel.life--;
+    if (pixel.life <= 0){
+      pixel.element = "dye";
+    }
+  },
+
+  reactions: {
+    glue: {elem2: null, func: (pixel1) => {pixel1.glueCount++}}
+  },
+
+  color: [
+    "#ff9999",
+    "#ff8999",
+    "#ffff99",
+    "#89ff99",
+    "#99ff99",
+    "#99ff89",
+    "#99ffff",
+    "#9989ff",
+    "#9999ff",
+    "#8999ff",
+    "#ff99ff",
+    "#ff9989",
+    "#ff9999",
+  ],
+  state: "liquid",
+  behavior: behaviors.LIQUID,
+  category: "states",
+  hidden: true,
+  density: 497,
+  stain: 0.08,
+}
 
 // Weird Voids
 
