@@ -91,7 +91,11 @@ const hslArrayFromPixel = function(pixel){
 }
 
 const hslToRgbString = function([h, s, l]){
-  const [r, g, b] = hslToRgb([h, s, l]);
+  let [r, g, b] = hslToRgb([h, s, l]);
+  // The staining logic breaks if the rgb values aren't integers
+  r = Math.floor(r);
+  g = Math.floor(g);
+  b = Math.floor(b);
   return `rgb(${r}, ${g}, ${b})`;
 }
 
