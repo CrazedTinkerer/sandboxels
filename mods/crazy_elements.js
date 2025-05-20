@@ -521,9 +521,12 @@ elements.liquid_rainbow = {
 
   reactions: {
     glue: {elem1: "congealing_liquid_rainbow", elem2: null},
+    soap: {elem2: ["foam", "bubble"], chance: 0.005, func: (pixel1, pixel2) => {pixel2.color = pixel1.color}},
   },
 
   state: "liquid",
+  stateHigh: ["spray_paint", "light", "light", "light", "light", "light", "light", "light", "light", "light", ],
+  tempHigh: 200,
   behavior: behaviors.LIQUID,
   category: "liquids",
   density: 497,
