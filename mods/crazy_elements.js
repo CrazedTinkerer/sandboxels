@@ -567,7 +567,7 @@ elements.liquid_light.reactions["ink"] = {elem1: "liquid_rainbow", elem2: "liqui
 };
 elements.liquid_light.reactions["blood"] = {elem1: "liquid_rainbow", elem2: "liquid_rainbow", temp1: 150, temp2: 150,
   func: (pixel1, pixel2) => {
-    pixel1.color = hslToRgbString([biasedWrapAroundRandom({range: 360, target: 0, rerolls: 4}), 100, 50]);
+    pixel1.color = hslToRgbString([biasedWrapAroundRandom({range: 360, target: 0, rerolls: 2}), 100, 50]);
     pixel2.color = hslToRgbString([biasedWrapAroundRandom({range: 360, target: 0, rerolls: 4}), 100, 50]);
   }
 };
