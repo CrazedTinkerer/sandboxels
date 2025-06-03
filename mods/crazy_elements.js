@@ -525,7 +525,7 @@ elements.liquid_rainbow = {
   },
 
   state: "liquid",
-  stateHigh: ["spray_paint", "light", "light", "light", "light", "light", "light", "light", "light", "light", ],
+  stateHigh: "light",
   tempHigh: 200,
   behavior: behaviors.LIQUID,
   category: "liquids",
