@@ -177,9 +177,26 @@ elements.hyper_powder = {
     ["XX","XX","XX","XX","XX"],
     ["M2","XX","M1","XX","M2"],
   ],
-  category: "special",
+  category: "powders",
   state: "solid",
   density: 1602,
+
+  tempHigh: 1700,
+  stateHigh: "molten_hyper_powder",
+}
+
+elements.packed_hyper_powder = {
+  color: ["#962964", "#bd3e83"],
+  behavior: [
+    ["XX","XX","XX","XX","XX"],
+    ["XX","XX","XX","XX","XX"],
+    ["SP","XX","XX","XX","SP"],
+    ["XX","XX","XX","XX","XX"],
+    ["XX","XX","M1","XX","XX"],
+  ],
+  category: "powders",
+  state: "solid",
+  density: 1682,
 
   tempHigh: 1700,
   stateHigh: "molten_hyper_powder",
@@ -292,7 +309,36 @@ elements.knight_powder = {
     ["M2","XX","XX","XX","M2"],
     ["XX","M1","XX","M1","XX"],
   ],
-  category: "special",
+  category: "powders",
+  state: "solid",
+  density: 1602,
+
+  tempHigh: 1700,
+  stateHigh: "molten_knight_powder"
+}
+
+elements.packed_knight_powder = {
+  color: ["#852d6d", "#a34188"],
+  behavior: function(pixel){
+    let leftSupported = (
+      elements[getPixelOrNull(pixel.x - 2, pixel.y - 1)?.element]?.state == "solid" ||
+      elements[getPixelOrNull(pixel.x - 2, pixel.y + 1)?.element]?.state == "solid"
+    );
+    let rightSupported = (
+      elements[getPixelOrNull(pixel.x + 2, pixel.y - 1)?.element]?.state == "solid" ||
+      elements[getPixelOrNull(pixel.x + 2, pixel.y + 1)?.element]?.state == "solid"
+    );
+
+    if (!(leftSupported && rightSupported)){
+      tryRandomOrder(
+        () => tryMove(pixel, pixel.x - 1, pixel.y + 2),
+        () => tryMove(pixel, pixel.x + 1, pixel.y + 2),
+      )
+    }
+
+    doDefaults(pixel);
+  },
+  category: "powders",
   state: "solid",
   density: 1602,
 
@@ -633,6 +679,8 @@ elements.congealing_liquid_rainbow = {
 
 // Weird Voids
 
+const VOID_IGNORE_ELEMENTS = ["void", "powdered_void"];
+
 elements.powdered_void = {
   color: ["#262626", "#363636", "#464646", ],
   behavior: [
@@ -640,13 +688,11 @@ elements.powdered_void = {
     ["DL","XX","DL"],
     ["M2","M1","M2"]
   ],
-  ignore: ["void", "powdered_void"],
+  ignore: VOID_IGNORE_ELEMENTS,
 
   hardness: 1,
   category: "special",
 }
-
-elements.void.breakInto = "powdered_void"
 
 
 // ##### Negative Space Stuff #####
