@@ -168,15 +168,101 @@ const getPixelOrNull = function(x, y){
   }
 }
 
-elements.hyper_powder = {
-  color: "#ef409c",
-  behavior: [
+/**
+ * @returns true if there is a supportive pixel at the passed in position
+ */
+const isSupport = function(x, y){
+  return elements[getPixelOrNull(x, y)?.element]?.state == "solid"
+}
+
+
+const customBehaviors = {
+  HYPER_POWDER: [
     ["XX","XX","XX","XX","XX"],
     ["XX","XX","XX","XX","XX"],
     ["XX","XX","XX","XX","XX"],
     ["XX","XX","XX","XX","XX"],
     ["M2","XX","M1","XX","M2"],
   ],
+  HYPER_SUPPORT: [
+    ["XX","XX","XX","XX","XX"],
+    ["XX","XX","XX","XX","XX"],
+    ["SP","XX","XX","XX","SP"],
+    ["XX","XX","XX","XX","XX"],
+    ["XX","XX","M1","XX","XX"],
+  ],
+  HYPER_FLUID: [
+    ["XX","XX","XX","XX","XX"],
+    ["XX","XX","XX","XX","XX"],
+    ["M2","XX","XX","XX","M2"],
+    ["XX","XX","XX","XX","XX"],
+    ["M1","XX","M1","XX","M1"],
+  ],
+  HYPER_GAS: [
+    ["M2","XX","M1","XX","M2"],
+    ["XX","XX","XX","XX","XX"],
+    ["M1","XX","XX","XX","M1"],
+    ["XX","XX","XX","XX","XX"],
+    ["M2","XX","M1","XX","M2"],
+  ],
+  KNIGHT_POWDER: [
+    ["XX","XX","XX","XX","XX"],
+    ["XX","XX","XX","XX","XX"],
+    ["XX","XX","XX","XX","XX"],
+    ["M2","XX","XX","XX","M2"],
+    ["XX","M1","XX","M1","XX"],
+  ],
+  KNIGHT_SUPPORT: function(pixel){
+    let leftSupported = isSupport(pixel.x - 2, pixel.y - 1) || isSupport(pixel.x - 2, pixel.y + 1);
+    let rightSupported = isSupport(pixel.x + 2, pixel.y - 1) || isSupport(pixel.x + 2, pixel.y + 1);
+
+    if (!(leftSupported && rightSupported)){
+      tryRandomOrder(
+        () => tryMove(pixel, pixel.x - 1, pixel.y + 2),
+        () => tryMove(pixel, pixel.x + 1, pixel.y + 2),
+      )
+    }
+
+    doDefaults(pixel);
+  },
+  KNIGHT_STURDY_SUPPORT: function(pixel){
+    let canFall = !(isSupport(pixel.x - 1, pixel.y + 2) || isSupport(pixel.x + 1, pixel.y + 2));
+    let leftSupported = isSupport(pixel.x - 2, pixel.y - 1) || isSupport(pixel.x - 2, pixel.y + 1);
+    let rightSupported = isSupport(pixel.x + 2, pixel.y - 1) || isSupport(pixel.x + 2, pixel.y + 1);
+
+    if (canFall && !(leftSupported && rightSupported)){
+      tryRandomOrder(
+        () => tryMove(pixel, pixel.x - 1, pixel.y + 2),
+        () => tryMove(pixel, pixel.x + 1, pixel.y + 2),
+      )
+    };
+
+    doDefaults(pixel);
+  },
+  KNIGHT_STURDY: function(pixel){
+    let canFall = !(isSupport(pixel.x - 1, pixel.y + 2) || isSupport(pixel.x + 1, pixel.y + 2));
+
+    if (canFall){
+      tryRandomOrder(
+        () => tryMove(pixel, pixel.x - 1, pixel.y + 2),
+        () => tryMove(pixel, pixel.x + 1, pixel.y + 2),
+      )
+    };
+
+    doDefaults(pixel);
+  },
+  KNIGHT_SORTA_STURDY: [
+    ["XX","XX","XX","XX","XX"],
+    ["XX","XX","XX","XX","XX"],
+    ["XX","XX","XX","XX","XX"],
+    ["XX","XX","XX","XX","XX"],
+    ["XX","M1","XX","M1","XX"],
+  ],
+}
+
+elements.hyper_powder = {
+  color: "#ef409c",
+  behavior: customBehaviors.HYPER_POWDER,
   category: "powders",
   state: "solid",
   density: 1602,
@@ -187,13 +273,7 @@ elements.hyper_powder = {
 
 elements.packed_hyper_powder = {
   color: ["#962964", "#bd3e83"],
-  behavior: [
-    ["XX","XX","XX","XX","XX"],
-    ["XX","XX","XX","XX","XX"],
-    ["SP","XX","XX","XX","SP"],
-    ["XX","XX","XX","XX","XX"],
-    ["XX","XX","M1","XX","XX"],
-  ],
+  behavior: customBehaviors.HYPER_SUPPORT,
   category: "powders",
   state: "solid",
   density: 1682,
@@ -204,14 +284,8 @@ elements.packed_hyper_powder = {
 
 elements.hyper_fluid = {
   color: "#b31cff",
-  behavior: [
-    ["XX","XX","XX","XX","XX"],
-    ["XX","XX","XX","XX","XX"],
-    ["M2","XX","XX","XX","M2"],
-    ["XX","XX","XX","XX","XX"],
-    ["M1","XX","M1","XX","M1"],
-  ],
-  category: "special",
+  behavior: customBehaviors.HYPER_FLUID,
+  category: "liquids",
   state: "liquid",
   density: 997,
 
@@ -221,13 +295,7 @@ elements.hyper_fluid = {
 
 elements.hyper_steam = {
   color: "#de9cff",
-  behavior: [
-    ["M2","XX","M1","XX","M2"],
-    ["XX","XX","XX","XX","XX"],
-    ["M1","XX","XX","XX","M1"],
-    ["XX","XX","XX","XX","XX"],
-    ["M2","XX","M1","XX","M2"],
-  ],
+  behavior: customBehaviors.HYPER_GAS,
 
   temp: 150,
   tempLow: 95,
@@ -239,7 +307,7 @@ elements.hyper_steam = {
 
 elements.molten_hyper_powder = {
   color: "#ef8340",
-  behavior: elements.hyper_fluid.behavior,
+  behavior: customBehaviors.HYPER_FLUID,
   tick: (pixel) => {
     emitFire(pixel, 0, -2, "hyper_fire");
   },
@@ -280,13 +348,12 @@ elements.hyper_fire = {
 
 elements.hyper_smoke = {
   color: "#380638",
-  behavior: [
-    ["M2","XX","M1","XX","M2"],
-    ["XX","XX","XX","XX","XX"],
-    ["M1","XX","DL%5","XX","M1"],
-    ["XX","XX","XX","XX","XX"],
-    ["M2","XX","M1","XX","M2"],
-  ],
+  behavior: customBehaviors.HYPER_GAS,
+  tick: function(pixel){
+    if (Math.random() < 0.05) {
+      deletePixel(pixel.x,pixel.y);
+    }
+  },
 
   hidden: true,
 
@@ -302,48 +369,111 @@ elements.hyper_smoke = {
 
 elements.knight_powder = {
   color: "#bf439e",
-  behavior: [
-    ["XX","XX","XX","XX","XX"],
-    ["XX","XX","XX","XX","XX"],
-    ["XX","XX","XX","XX","XX"],
-    ["M2","XX","XX","XX","M2"],
-    ["XX","M1","XX","M1","XX"],
-  ],
+  behavior: customBehaviors.KNIGHT_POWDER,
   category: "powders",
   state: "solid",
   density: 1602,
+
+  tempHigh: 1700,
+  stateHigh: "molten_knight_powder",
+
+  reactions: {
+    "glue": {elem1:"sturdy_knight_powder", elem2:null, chance:0.25},
+    "knight_fluid":{elem1:"wet_knight_powder",elem2:null},
+    "hyper_fluid":{elem1:"wet_knight_powder",elem2:null},
+
+    "water":{elem1:"wet_knight_powder",elem2:null},
+		"salt_water":{elem1:"wet_knight_powder",elem2:"foam"},
+		"sugar_water":{elem1:"wet_knight_powder",elem2:null},
+		"seltzer":{elem1:"wet_knight_powder",elem2:null},
+		"dirty_water":{elem1:"wet_knight_powder",elem2:null},
+		"pool_water":{elem1:"wet_knight_powder",elem2:null},
+		"slush":{elem1:"wet_knight_powder",elem2:null},
+		"soda":{elem1:"wet_knight_powder",elem2:null},
+		"juice":{elem1:"wet_knight_powder",elem2:null},
+		"milk":{elem1:"wet_knight_powder",elem2:null},
+		"chocolate_milk":{elem1:"wet_knight_powder",elem2:null},
+		"fruit_milk":{elem1:"wet_knight_powder",elem2:null},
+		"pilk":{elem1:"wet_knight_powder",elem2:null},
+		"eggnog":{elem1:"wet_knight_powder",elem2:null},
+		"nut_milk":{elem1:"wet_knight_powder",elem2:null},
+		"cream":{elem1:"wet_knight_powder",elem2:null},
+		"vinegar":{elem1:"wet_knight_powder",elem2:null},
+		"blood":{elem1:"wet_knight_powder",elem2:null},
+		"vaccine":{elem1:"wet_knight_powder",elem2:null},
+		"antibody":{elem1:"wet_knight_powder",elem2:null},
+		"infection":{elem1:"wet_knight_powder",elem2:null},
+		"poison":{elem1:"wet_knight_powder",elem2:null},
+		"antidote":{elem1:"wet_knight_powder",elem2:null},
+  }
+}
+
+elements.packed_knight_powder = {
+  color: ["#852d6d", "#a34188"],
+  behavior: customBehaviors.KNIGHT_SUPPORT,
+  category: "powders",
+  state: "solid",
+  density: 1682,
+
+  tempHigh: 1700,
+  stateHigh: "molten_knight_powder",
+
+  reactions: {
+    "glue": {elem1:"sturdy_knight_powder", elem2:null, chance:0.04},
+  }
+}
+
+elements.sturdy_knight_powder = {
+  color: ["#5d214c", "#7c3969"],
+  behavior: customBehaviors.KNIGHT_STURDY_SUPPORT,
+  category: "powders",
+  state: "solid",
+  density: 1692,
 
   tempHigh: 1700,
   stateHigh: "molten_knight_powder"
 }
 
-elements.packed_knight_powder = {
-  color: ["#852d6d", "#a34188"],
-  behavior: function(pixel){
-    let leftSupported = (
-      elements[getPixelOrNull(pixel.x - 2, pixel.y - 1)?.element]?.state == "solid" ||
-      elements[getPixelOrNull(pixel.x - 2, pixel.y + 1)?.element]?.state == "solid"
-    );
-    let rightSupported = (
-      elements[getPixelOrNull(pixel.x + 2, pixel.y - 1)?.element]?.state == "solid" ||
-      elements[getPixelOrNull(pixel.x + 2, pixel.y + 1)?.element]?.state == "solid"
-    );
-
-    if (!(leftSupported && rightSupported)){
-      tryRandomOrder(
-        () => tryMove(pixel, pixel.x - 1, pixel.y + 2),
-        () => tryMove(pixel, pixel.x + 1, pixel.y + 2),
-      )
-    }
-
-    doDefaults(pixel);
-  },
+elements.wet_knight_powder = {
+  color: "#9d5189",
+  behavior: customBehaviors.KNIGHT_SORTA_STURDY,
   category: "powders",
   state: "solid",
-  density: 1602,
+  density: 1902,
+
+  tempHigh: 100,
+	stateHigh: "packed_knight_powder",
+	onStateHigh: function(pixel) {
+		releaseElement(pixel,"knight_steam");
+	},
+	tempLow: -50,
+	stateLow: "packed_knight_powder",
+
+  reactions: {
+    "glue": {elem1:"sturdy_knight_powder", elem2:null, chance:0.5},
+  },
+}
+
+elements.knightstone = {
+  color: "#7b2f67",
+  behavior: customBehaviors.KNIGHT_STURDY,
+  category: "powders",
+  state: "solid",
+  density: 1812,
 
   tempHigh: 1700,
-  stateHigh: "molten_knight_powder"
+  stateHigh: "molten_knight_powder",
+
+  reactions: {
+    "water": { elem2: "knight_powder", chance: 0.00035 },
+    "salt_water": { elem2: "knight_powder", chance: 0.00035 },
+    "dirty_water": { elem2: "knight_powder", chance: 0.00035 },
+    "sugar_water": { elem2: "knight_powder", chance: 0.00035 },
+    "pool_water": { elem2: "knight_powder", chance: 0.00035 },
+    "seltzer": { elem2: "knight_powder", chance: 0.00035 },
+    "knight_fluid": { elem2: "knight_powder", chance: 0.00035 },
+    "hyper_fluid": { elem2: "knight_powder", chance: 0.00035 },
+  },
 }
 
 elements.knight_fluid = {
@@ -355,7 +485,7 @@ elements.knight_fluid = {
     ["M2","XX","XX","XX","M2"],
     ["XX","M1","XX","M1","XX"],
   ],
-  category: "special",
+  category: "liquids",
   state: "liquid",
   density: 997,
 
@@ -393,7 +523,7 @@ elements.molten_knight_powder = {
   density: 1520,
 
   tempLow: 1700,
-  stateLow: "knight_powder",
+  stateLow: "knightstone",
 }
 
 elements.knight_fire = {
@@ -568,6 +698,7 @@ elements.liquid_rainbow = {
   reactions: {
     glue: {elem1: "congealing_liquid_rainbow", elem2: null},
     soap: {elem2: ["foam", "bubble"], chance: 0.005, func: (pixel1, pixel2) => {pixel2.color = pixel1.color}},
+    static: {elem1: null, elem2: "rainbow"},
   },
 
   state: "liquid",
