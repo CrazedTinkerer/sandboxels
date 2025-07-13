@@ -828,27 +828,46 @@ elements.powdered_void = {
 
 // ##### Negative Space Stuff #####
 
-// Elements that negative space stuff can't move through
-const negspaceBlockers = [
-  "negspace_powder",
-  "negspace_fluid",
-  "negspace_steam",
-]
+/**
+ * @returns true if the passed in pixel can move into the given space
+ */
+const canNegspaceMoveInto = function(pixel, x, y){
+  const pixelToSwapWith = getPixelOrNull(x, y);
+  if (!pixelToSwapWith){ // Empty space is treated as a wall
+    return false;
+  };
+
+  if (elements[pixelToSwapWith.element].negspaceState === undefined){ // Pass through most elements
+    return true;
+  }
+
+  return checkNegspaceDensity(pixel, pixelToSwapWith);
+}
 
 /**
- * @returns true if a negspace element can move into the given space
+ * @returns true if movingPixel can swap with destinationPixel based on their densities and negspaceStates.
  */
-const canNegspaceMoveInto = function(x, y){
-  if (isEmpty(x, y) || outOfBounds(x, y)){
-    return false;
-  }
+const checkNegspaceDensity = function(movingPixel, destinationPixel){
+  // It's just the density part of tryMove but tweaked a little
+  const movingElement = elements[movingPixel.element];
+  const destinationElement = elements[destinationPixel.element];
 
-  const element = pixelMap[x][y].element;
-  if (negspaceBlockers.includes(element)){
-    return false;
+  if (movingElement.density !== undefined && destinationElement.density !== undefined) {
+    // if the pixel's state + ">" + newPixel's state is in validDensitySwaps, and the pixel's density is larger than the newPixel's density, swap the pixels
+    if (validDensitySwaps[movingElement.negspaceState][destinationElement.negspaceState] !== undefined && movingElement.density >= destinationElement.density) {
+      // chance depending on the difference in density
+      if (Math.random() < (movingElement.density - destinationElement.density)/(movingElement.density + destinationElement.density)) {
+        return true;
+      }
+    }
   }
+}
 
-  return true;
+const doNegspaceAirDensity = function(pixel){
+  const pixelDensity = pixel.element.density;
+  if (Math.random() < (airDensity - pixelDensity)/(airDensity + pixelDensity)) {
+    tryNegspaceMove(pixel, 0, -1);
+  }
 }
 
 /**
@@ -862,7 +881,7 @@ const canNegspaceMoveInto = function(x, y){
 const tryNegspaceMove = function(pixel, xOffset, yOffset){
   const x = pixel.x + xOffset;
   const y = pixel.y + yOffset;
-  if (canNegspaceMoveInto(x, y)){
+  if (canNegspaceMoveInto(pixel, x, y)){
     const targetPixel = pixelMap[x][y];
     swapPixels(pixel, targetPixel);
     return true;
@@ -873,6 +892,7 @@ const tryNegspaceMove = function(pixel, xOffset, yOffset){
 
 elements.negspace_powder = {
   color: "#7586e6",
+  behavior: behaviors.WALL,
   tick: (pixel) => {
     if (!tryNegspaceMove(pixel, 0, 1)){
       tryRandomOrder(
@@ -881,15 +901,17 @@ elements.negspace_powder = {
       )
     }
 
-    doHeat(pixel);
+    // doHeat(pixel);
   },
 
   density: 1603,
-  category: "special",
+  category: "powders",
+  negspaceState: "solid",
 }
 
 elements.negspace_fluid = {
   color: "#ffb921",
+  behavior: behaviors.WALL,
   tick: (pixel) => {
     if (!tryRandomOrder(
       () => {return tryNegspaceMove(pixel, -1, 1)},
@@ -902,18 +924,20 @@ elements.negspace_fluid = {
       )
     }
 
-    doHeat(pixel);
+    // doHeat(pixel);
   },
 
   tempHigh: 100,
   stateHigh: "negspace_steam",
   density: 997,
-  category: "special",
+  category: "liquids",
+  negspaceState: "liquid",
 }
 
 elements.negspace_steam = {
   color: "#ffde96",
   glow: true, // Enable the gas rendering effect
+  behavior: behaviors.WALL,
   tick: (pixel) => {
     if (!tryRandomOrder(
       () => {return tryNegspaceMove(pixel, -1, 0)},
@@ -930,17 +954,15 @@ elements.negspace_steam = {
     }
 
     // Air Density (The reason steam floats up)
-    const pixelDensity = pixel.element.density;
-    if (Math.random() < (airDensity - pixelDensity)/(airDensity + pixelDensity)) {
-      tryNegspaceMove(pixel, 0, -1);
-    }
+    doNegspaceAirDensity(pixel);
 
-    doHeat(pixel); // Make heat propagation work consistently (without this, it looks like it works in some cases but not always)
+    // doHeat(pixel); // Make heat propagation work consistently (without this, it looks like it works in some cases but not always)
   },
 
   temp: 150,
   tempLow: 95,
   stateLow: "negspace_fluid",
-  category: "special",
+  category: "gases",
   density: 0.6,
+  negspaceState: "gas",
 }
