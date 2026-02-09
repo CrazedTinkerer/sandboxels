@@ -6,7 +6,10 @@ Play for free at [Sandboxels.R74n.com](https://sandboxels.r74n.com/).
 Join the [Discord server](https://discord.com/invite/ejUc6YPQuS).
 
 ![Landscape made in Sandboxels](https://raw.githubusercontent.com/R74nCom/sandboxels/main/icons/cover-3840x1240px-text.png)
- 
+
+# Modding
+**Mods are no longer accepted in this repository.** Please go to the new one at [R74nCom/Sandboxels-Mods](https://github.com/R74nCom/Sandboxels-Mods/).
+
 # Controls
  * Left Click = Draw pixels
  * Right Click = Erase pixels
