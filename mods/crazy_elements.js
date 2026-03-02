@@ -613,6 +613,23 @@ const rainbowSort = function(pixels){
 
 }
 
+const staticSort = function(pixels){
+  const mainPixel = pixels[1]; // The pixel all the others are compared against
+  const swapScores = pixels.map((pixel) => {
+    let score = hslArrayFromPixel(pixel)[2];
+    return score;
+  });
+
+  const swapIndices = checkSwapIndices(swapScores);
+
+  if (swapIndices.length === 2){
+    const pixel1 = pixels[swapIndices[0]];
+    const pixel2 = pixels[swapIndices[1]];
+    swapPixels(pixel1, pixel2);
+  }
+
+}
+
 /**
  * Takes an array of three numbers and returns an array of either 2 or 0 numbers,
  * representing indices that must be swapped to put the array in either increasing or decreasing order
@@ -754,6 +771,71 @@ elements.liquid_light.reactions["dirty_water"] = {elem1: "liquid_rainbow", elem2
     pixel2.color = hslToRgbString([Math.random() * 360, random(81, 100), random(28, 50)]);
   }
 };
+
+elements.liquid_static = {
+  color: ["#ffffff","#888888","#000000"],
+
+  onPlace: function(pixel){
+    pixel.color = hslToRgbString([0, 0, Math.random() * 100]);
+  },
+
+  tick: function(pixel){
+    const changeChance = Math.max(0, (pixel.temp - 273) / 5000)
+    if (Math.random() < changeChance){
+      let hslArray = hslArrayFromPixel(pixel);
+      hslArray[2] = Math.random() * 100;
+      pixel.color = hslToRgbString(hslArray);
+    }
+
+    let horizontalPixels = [];
+    let verticalPixels = [];
+
+    for (let x = -1; x <= 1; x++){
+      const checkedPixel = getPixelOrNull(pixel.x + x, pixel.y);
+      if (checkedPixel?.element === pixel.element){
+        horizontalPixels.push(checkedPixel);
+      } else {
+        horizontalPixels = null;
+        break;
+      }
+    }
+
+    for (let y = -1; y <= 1; y++){
+      const checkedPixel = getPixelOrNull(pixel.x, pixel.y + y);
+      if (checkedPixel?.element === pixel.element){
+        verticalPixels.push(checkedPixel);
+      } else {
+        verticalPixels = null;
+        break;
+      }
+    }
+
+    tryRandomOrder(
+      () => {
+        if (horizontalPixels){
+          staticSort(horizontalPixels);
+        }
+      },
+      () => {
+        if (verticalPixels){
+          staticSort(verticalPixels);
+        }
+      }
+    )
+  },
+
+  reactions: {
+    rainbow: {elem1: null, elem2: "static"},
+  },
+
+  state: "liquid",
+  stateHigh: "light",
+  tempHigh: 4000,
+  behavior: behaviors.LIQUID,
+  category: "liquids",
+  density: 497,
+  stain: 0.08,
+}
 
 
 elements.congealing_liquid_rainbow = {
